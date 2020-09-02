@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Micro Blogging Crawler</title>
+{% endblock %}
+
+{% block body %}
+<div id="content" class="content">
+    <h1>Micro Blogging Crawler</h1>
+
+    <h2> Test List </h2>
+    <ul>
+        <li>
+            <a href="/crawler/users/lookup/1046814112594976768">Lookup</a>
+        </li>
+        <li>
+            <a href="/crawler/user/timeline/1046814112594976768">Timeline</a>
+        </li>
+        <li>
+            <a href="/crawler/user/favorites/1046814112594976768">Favorites</a>
+        </li>
+        <li>
+            <a href="/crawler/tweet/retweeters/">Retweetes ids</a>
+        </li>
+        <li>
+            <a href="/crawler/user/list/1046814112594976768">User List</a>
+        </li>
+        <li>
+            <a href="/crawler/list/subscribers/">List subscribers</a>
+        </li>
+    </ul>
+    <!-- {% if tasks|length < 1 %}
+        <h4>There are no tasks. Create one below</h4>
+    {% else %}
+    <table>
+        <tr>
+            <th>Task</th>
+            <th>Added</th>
+            <th>Actions</th>
+        </tr>
+        {% for task in tasks %}
+        <tr>
+            <td>{{task.content}}</td>
+            <td>{{task.date_created.date()}}</td>
+            <td></td>
+            <td>
+                <a href="/delete/{{task.id}}">Delete</a>
+                <br>
+                <a href="/update/{{task.id}}">Update</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <form action="/" method="POST">
+        <input type="text" name="content" id="contet">
+        <input type="submit" value="User Id">
+    </form> -->
+
+    <div>
+        <h2>Query Results</h2>
+
+        {% if users|length > 0 %}
+            <h3>Users</h3>
+            {% for user in users %}
+                <div>{{user}}</div>
+            {% endfor %}
+        {% endif %}
+
+
+        {% if statuses|length > 0 %}
+            <h3>Tweets</h3>
+            {% for tweet in statuses %}
+                <div>{{tweet}}</div>
+            {% endfor %}
+        {% endif %}
+
+
+        {% if statuses|length > 0 %}
+            <h3>List</h3>
+            {% for list in lists %}
+                <div>{{list}}</div>
+            {% endfor %}
+        {% endif %}
+
+        
+    </div>
+</div>
+{% endblock %}
