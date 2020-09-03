@@ -64,7 +64,11 @@
         {% if users|length > 0 %}
             <h3>Users</h3>
             {% for user in users %}
-                <div>{{user}}</div>
+                <div>Bio: {{user.description}}</div>
+                <div>Created: {{user.created_at}}</div>
+                <div>Post: {{user.statuses_count}}</div>
+                <div>Followers: {{user.followers_count}}</div>
+                <div>Followees: {{user.friends_count}}</div>
             {% endfor %}
         {% endif %}
 
