@@ -1,5 +1,6 @@
 from flask import Flask, render_template, url_for, request, redirect
 import crawler_twitter_api as twitter
+import tweet_analyzer as tweet_analyzer
 
 app = Flask(__name__)
 
@@ -36,3 +37,8 @@ def get_user_subscriberd_lists(user_id):
 def get_list_subscribers(list_id):
     users = twitter.get_list_subscribers(list_id)
     return render_template('index.html', users=users)
+
+# Services test
+@app.route('/tagme/test', methods=['GET'])
+def test_tagme():
+    tweet_analyzer.tagme_test()

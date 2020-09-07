@@ -75,9 +75,26 @@
 
         {% if statuses|length > 0 %}
             <h3>Tweets</h3>
-            {% for tweet in statuses %}
-                <div>{{tweet}}</div>
-            {% endfor %}
+            <ol>
+                {% for tweet in statuses %}
+                    <li style="padding-top: 10px;">
+                        <!-- <div>{{tweet}}</div> -->
+                        <div>
+                            <strong>Text: </strong>
+                            {{tweet.text}}
+                        </div>
+                        <div>
+                            <strong>Mentions: </strong>
+                            {{tweet.entities.user_mentions}}
+                        </div>
+                        <div>
+                            <strong>Id: </strong>
+                            {{tweet.id}}
+                        </div>
+
+                    </li>
+                {% endfor %}
+            </ol>
         {% endif %}
 
 
