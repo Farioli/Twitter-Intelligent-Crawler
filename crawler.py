@@ -1,20 +1,12 @@
 import crawler_twitter_api as twitter
 
 
-predicate_keywords = []
-vocabolary = []
+
 
 # interesting user / total user analyzed
 prEp = 1
 
-# Uc
-crawled_users = []
 
-# Uf
-frontier_users = []
-
-
-q1 = []
 q2 = []
 q3 = []
 q4 = []
@@ -25,26 +17,41 @@ retrieved_tweets = []
 
 output_tweets = []
 
-def init_crawler(seeds):
-    q1 = []
-    q2 = []
-    q3 = []
-    q4 = []
-    q5 = []
-    q6 = []
-    crawled_users = []
-    frontier_users = seeds
-
 '''
     Seeds is a list of twitter user ids
 '''
 def crawling(predicate, seeds):
 
-    init_crawler(seeds)
-    q1 = seeds
-    tweets = []
+    predicate_keywords = []
+    vocabolary = []
+
+    #Test
+    seeds = [(1, 0.87), (2, 0.89), (3, 0.23), (4, 0.25)]
+
+    # INITIALIZZATION
+    q2 = []
+    q3 = []
+    q4 = []
+    q5 = []
+    q6 = []
+
+    crawled_users = []
+    output_tweets = []
+    
+
+    # Uf, q1 = frontier users - Each element must be a (user_id, priority)
+    frontier = []
+
+    # Uc = Crawled users - Each elements must be: (user_id, goal, keywords, bin_followers, bin_followee)
+    crawled_users = []
+    frontier = seeds
+
+    # MAIN LOOP
+
 
     #1 - Pop the top user (highest It) from q1 (frontier)
+    next_user_id = get_max_priority_from_queue(frontier)
+    print(frontier)
 
     #2 - Get the Ip from the user profile analysis and push the user in q2
 
@@ -55,8 +62,7 @@ def crawling(predicate, seeds):
     #5 - Add user to crawled users (Uc)
 
 
-    return tweets
-    #todo
+    # return tweets
 
 '''
     ft : T -> {0,1}
@@ -77,11 +83,47 @@ def user_function(user_id, predicate):
     found = False
     timeline = twitter.get_user_timeline_by_id(user_id)
 
-    for(tweet in timeline):
+    for tweet in timeline:
         if predicate_function(tweet, predicate) == 1:
             found = True
     return found
 
+# utility: get the user with max priority
+def get_max_priority_from_queue(user_queue):
 
-def calculate_output(number_of_results):
+    if len(user_queue) > 0:
+        max_priority_user = user_queue[0]
+        for user in user_queue:
+            if user[1] > max_priority_user[1]:
+                max_priority_user = user
+        user_queue.remove(max_priority_user)
+        return max_priority_user
+    else:
+        return "Empty!"
+
+# This is used to calculate Ep
+def get_goal_user_list(crawled_users):
+
+    goal_users = []
+
+    for user in crawled_users:
+        if user[1] == True:
+            goal_users.append(user)
+    
+    return goal_users
+
+# This is used to calculate Pr(wi)
+def get_goal_user_list_by_keyword(crawled_users, keyword):
+
+    keyword_goal_users = []
+
+    for user in crawled_users:
+        if user[1] == True:
+            if keyword in user[2]:
+                keyword_goal_users.append(user)
+    
+    return keyword_goal_users
+
+
+def calculate_cralwer_output(number_of_results):
     return "todo"
