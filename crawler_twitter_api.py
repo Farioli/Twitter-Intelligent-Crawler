@@ -29,7 +29,7 @@ api = tweepy.API(auth)
 '''
 def get_users_by_ids(user_ids):
     users_info = api.lookup_users(user_ids=user_ids)
-    print(users_info)
+    #print(users_info)
     return users_info
 
 '''

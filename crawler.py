@@ -1,5 +1,5 @@
 import crawler_twitter_api as twitter
-
+import user_profile_analyzer as user_analyzer
 
 
 
@@ -26,7 +26,7 @@ def crawling(predicate, seeds):
     vocabolary = []
 
     #Test
-    seeds = [(1, 0.87), (2, 0.89), (3, 0.23), (4, 0.25)]
+    seeds = [(1, 0.87), (1046814112594976768, 0.89), (3, 0.23), (4, 0.25)]
 
     # INITIALIZZATION
     q2 = []
@@ -50,8 +50,21 @@ def crawling(predicate, seeds):
 
 
     #1 - Pop the top user (highest It) from q1 (frontier)
-    next_user_id = get_max_priority_from_queue(frontier)
-    print(frontier)
+    next_user = get_max_priority_from_queue(frontier)
+
+    user = twitter.get_users_by_ids([next_user[0]])
+    
+    priority_q2, new_keywords = user_analyzer.analyze_user(user[0], 0.1)
+
+    q2.append((user, priority_q2))
+    
+    for key in new_keywords:
+        if not key in vocabolary:
+            vocabolary.append(key)
+
+    print(vocabolary)
+    print(q2)
+    
 
     #2 - Get the Ip from the user profile analysis and push the user in q2
 

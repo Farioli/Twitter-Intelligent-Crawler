@@ -8,13 +8,13 @@ crawled_users_example = [
     (5, False, ['sole', 'carlo', 'sera', 'finalmente'], 3, 3),
 ]
 
+def test_crawling():
+    crawler.crawling("Yu-Gi-Oh", [(1, 0.87), (1046814112594976768, 0.89), (3, 0.23), (4, 0.25)])
+
 def test_get_frontier_best_user():
     frontier = [(1, 0.87), (2, 0.89), (3, 0.23), (4, 0.25)]
     result = crawler.get_max_priority_from_queue(frontier)
     print(result == (2, 0.89))
-
-def test_crawling():
-    crawler.crawling("Yu-Gi-Oh", [(1, 0.87), (2, 0.89), (3, 0.23), (4, 0.25)])
 
 def test_get_goal_user():
     user_goal = crawler.get_goal_user_list(crawled_users_example)
@@ -28,4 +28,4 @@ def test_get_goal_user_by_keywords():
     print(len(palla_goal) == 1)
     print(len(sole_goal) == 0)
 
-test_get_goal_user_by_keywords()
+test_crawling()

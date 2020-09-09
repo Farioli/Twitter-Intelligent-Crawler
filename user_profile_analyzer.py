@@ -43,24 +43,27 @@ def get_year_since_creation(creation_date):
 '''
 def analyze_user(user, users_goal_ratio):
 
-    bio = user["description"]
-    date_creation = user["created_at"]
-    num_post = user["statuses_count"]
-    num_followers = ["followers_count"]
-    num_followees =  user["friends_count"]
+    bio = user.description
+    date_creation = user.created_at
+    num_post = user.statuses_count
+    num_followers = user.followers_count
+    num_followees =  user.friends_count
 
     binned_followers = logaritmic_binning(num_followees)
     binned_followees = logaritmic_binning(num_followers)
 
     coeff_activity = num_post / get_year_since_creation(date_creation) 
 
-    ir_bio = analyze_bio(bio)
+    ir_bio = analyze_bio(bio, True)
     ir_features = 0
 
     ir_indegree = 0
     ir_outegree = 0
 
-    return calculate_user_priority()
+    user_ir = calculate_user_priority()
+    keywords = get_user_bio_keywords(bio, True)
+
+    return (user_ir, keywords)
 
 '''
     Returns the interest ratio for the user bio
@@ -69,7 +72,6 @@ def analyze_bio(bio, filterStopwords):
     
     # Called Sb
     bio_keywords = []
-    
 
     interest_ratio_bio = 1
 
