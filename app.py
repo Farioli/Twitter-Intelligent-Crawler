@@ -1,6 +1,7 @@
 from flask import Flask, render_template, url_for, request, redirect
 import crawler_twitter_api as twitter
 import tweet_analyzer as tweet_analyzer
+import user_profile_analyzer as user_profile_analyzer
 
 app = Flask(__name__)
 
@@ -39,6 +40,32 @@ def get_list_subscribers(list_id):
     return render_template('index.html', users=users)
 
 # Services test
+@app.route('/user/bio/test', methods=['GET', 'POST'])
+def calculate_user_bio_keywords():
+    keywords = []
+    if request.method == 'POST':
+        try:
+            user_bio = request.form['bio']
+            keywords = get_user_bio_keywords(user_bio, False)
+            return render_template('test.html', bioKeywords=keywords)
+        except:
+            return 'There was an issue getting the bio'
+    else:
+        return render_template('test.html', bioKeywords=keywords)
+
+
 @app.route('/tagme/test', methods=['GET'])
 def test_tagme():
     tweet_analyzer.tagme_test()
+
+# SHUTDOWN
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    shutdown_server()
+    return 'Server shutting down...'

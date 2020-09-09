@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Crawler functions test</title>
+{% endblock %}
+
+{% block body %}
+
+<a href="/">Home</a>
+
+<h1>
+    Bio Analysis
+</h1>
+
+<form action="/user/bio/test" method="POST">
+    <h6>User Bio</h6>
+    <input type="text" name="bio" id="bio">
+    <input type="submit" value="Get Keywords">
+</form>
+
+<div>
+    {% if bioKeywords|length > 0 %}
+    <h3>Keywords extracted</h3>
+        <div>
+        {% for keyword in bioKeywords %}
+            {{keyword}} | 
+        {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

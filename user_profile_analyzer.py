@@ -1,5 +1,8 @@
+import nltk
 from dateutil.relativedelta import relativedelta
 from datetime import date
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize 
 
 ir_bio = 0 # Ib interest_ratio_bio
 ir_features = 0 #Ia interest_ratio_features
@@ -62,15 +65,16 @@ def analyze_user(user, users_goal_ratio):
 '''
     Returns the interest ratio for the user bio
 '''
-def analyze_bio(bio):
-
-    #TODO: eliminare stopwords dalla bio
-    # Sb
+def analyze_bio(bio, filterStopwords):
+    
+    # Called Sb
     bio_keywords = []
+    
 
     interest_ratio_bio = 1
 
     for keyword in bio_keywords:
+        print("TODO")
 
     interest_ratio_bio = 0
 
@@ -124,3 +128,23 @@ def calculate_user_followees_interest_ratio(goal_user_F_bin_i, total_user_F_bin_
 
     interest_f = [ (vFi / (prEFi * users_goal_ratio)) + (vFi_negated / ( prEFi * (1 - users_goal_ratio))) ]
     return intereset_f
+
+# UTILITIES FUNCTIONS
+def get_user_bio_keywords(bio, filterStopwords):
+    bio_keywords = []
+    bio = bio.replace(",", " ")
+    bio = bio.replace(".", " ")
+    bio_keywords = bio.split(" ")
+
+    if filterStopwords == True :
+        # Delete stopwords from bio
+        stop_words = set(stopwords.words('english')) 
+        word_tokens = word_tokenize(bio) 
+
+        filtered_sentence = []
+
+        for w in word_tokens: 
+            if w not in stop_words: 
+                filtered_sentence.append(w) 
+        bio_keywords = filtered_sentence
+    return bio_keywords
