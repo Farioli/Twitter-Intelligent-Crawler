@@ -1,7 +1,7 @@
 from flask import Flask, render_template, url_for, request, redirect
 import crawler_twitter_api as twitter
 import tweet_analyzer as tweet_analyzer
-import user_profile_analyzer as user_profile_analyzer
+import user_profile_analyzer as user_analyzer
 
 app = Flask(__name__)
 
@@ -45,8 +45,11 @@ def calculate_user_bio_keywords():
     keywords = []
     if request.method == 'POST':
         try:
-            user_bio = request.form['bio']
-            keywords = get_user_bio_keywords(user_bio, False)
+            filterStopwords = False
+            user_bio = request.form["bio"]
+            if request.form.get("stopwords") :
+                filterStopwords = True
+            keywords = user_analyzer.get_user_bio_keywords(user_bio, filterStopwords)
             return render_template('test.html', bioKeywords=keywords)
         except:
             return 'There was an issue getting the bio'
@@ -65,7 +68,7 @@ def shutdown_server():
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
 
-@app.route('/shutdown', methods=['POST'])
+@app.route('/shutdown', methods=['GET'])
 def shutdown():
     shutdown_server()
     return 'Server shutting down...'

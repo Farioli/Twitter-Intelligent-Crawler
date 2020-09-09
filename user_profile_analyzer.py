@@ -137,10 +137,10 @@ def get_user_bio_keywords(bio, filterStopwords):
     bio_keywords = bio.split(" ")
 
     if filterStopwords == True :
+        print("Filtering stopwords...")
         # Delete stopwords from bio
-        stop_words = set(stopwords.words('english')) 
+        stop_words = stopwords.words('english')
         word_tokens = word_tokenize(bio) 
-
         filtered_sentence = []
 
         for w in word_tokens: 
