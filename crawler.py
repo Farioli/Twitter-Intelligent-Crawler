@@ -1,11 +1,11 @@
 import crawler_twitter_api as twitter
 import user_profile_analyzer as user_analyzer
-
+import crawled_users as cu
+import vocabolary as v
 
 
 # interesting user / total user analyzed
 prEp = 1
-
 
 q2 = []
 q3 = []
@@ -14,7 +14,6 @@ q5 = []
 q6 = []
 
 retrieved_tweets = []
-
 output_tweets = []
 
 '''
@@ -23,7 +22,7 @@ output_tweets = []
 def crawling(predicate, seeds):
 
     predicate_keywords = []
-    vocabolary = []
+    vocabolary = v.Vocabolary()
 
     #Test
     seeds = [(1, 0.87), (1046814112594976768, 0.89), (3, 0.23), (4, 0.25)]
@@ -34,8 +33,6 @@ def crawling(predicate, seeds):
     q4 = []
     q5 = []
     q6 = []
-
-    crawled_users = []
     output_tweets = []
     
 
@@ -43,7 +40,7 @@ def crawling(predicate, seeds):
     frontier = []
 
     # Uc = Crawled users - Each elements must be: (user_id, goal, keywords, bin_followers, bin_followee)
-    crawled_users = []
+    crawled_users = cu.CrawledUsers()
     frontier = seeds
 
     # MAIN LOOP
@@ -54,7 +51,7 @@ def crawling(predicate, seeds):
 
     user = twitter.get_users_by_ids([next_user[0]])
     
-    priority_q2, new_keywords = user_analyzer.analyze_user(user[0], 0.1)
+    priority_q2, new_keywords = user_analyzer.analyze_user(user[0], crawled_users, vocabolary)
 
     q2.append((user, priority_q2))
     
@@ -73,6 +70,9 @@ def crawling(predicate, seeds):
     #4 - Analyize the timeline of the q2 user
 
     #5 - Add user to crawled users (Uc)
+
+    # Update the keywords interest ratio
+    vocabolary.update_keywords_interest_ratio(crawled_users)
 
 
     # return tweets
@@ -113,29 +113,6 @@ def get_max_priority_from_queue(user_queue):
         return max_priority_user
     else:
         return "Empty!"
-
-# This is used to calculate Ep
-def get_goal_user_list(crawled_users):
-
-    goal_users = []
-
-    for user in crawled_users:
-        if user[1] == True:
-            goal_users.append(user)
-    
-    return goal_users
-
-# This is used to calculate Pr(wi)
-def get_goal_user_list_by_keyword(crawled_users, keyword):
-
-    keyword_goal_users = []
-
-    for user in crawled_users:
-        if user[1] == True:
-            if keyword in user[2]:
-                keyword_goal_users.append(user)
-    
-    return keyword_goal_users
 
 
 def calculate_cralwer_output(number_of_results):
