@@ -33,6 +33,16 @@ def get_users_by_ids(user_ids):
     return users_info
 
 '''
+    #2 users/lookup
+    @user_ids must be a list of string
+    Output: List of Users
+'''
+def get_users_by_names(user_names):
+    users_info = api.lookup_users(screen_names=user_names)
+    #print(users_info)
+    return users_info
+
+'''
     #2 statuses/user_timeline
     Output: List of Statuses (tweets)
 '''
@@ -51,7 +61,7 @@ def get_user_timeline_by_id(user_id):
 '''
 def get_recents_favorite_tweets_by_id(user_id):
     favorited_tweets = api.favorites(id=user_id)
-    print(favorited_tweets)
+    # print(favorited_tweets)
     return favorited_tweets
 
 '''
@@ -62,7 +72,7 @@ def get_recents_favorite_tweets_by_id(user_id):
 '''
 def get_tweet_retweeted_users(tweet_id):
     user_ids_list = api.retweeters(tweet_id)
-    print(user_ids_list)
+    # print(user_ids_list)
     return user_ids_list
 
 '''

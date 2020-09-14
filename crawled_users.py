@@ -1,14 +1,14 @@
 class UserData:
 
-    user_id : int
+    id : int
     is_goal : bool
     keywords : set
     bin_activities: int
     bin_followers : int
     bin_followees : int
 
-    def __init__(self, user_id, is_goal, keywords, bin_activities, bin_followers, bin_followees):
-        self.user_id = user_id
+    def __init__(self, id, is_goal, keywords, bin_activities, bin_followers, bin_followees):
+        self.id = id
         self.is_goal = is_goal
         self.keywords = keywords
         self.bin_activities = bin_activities

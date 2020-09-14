@@ -9,6 +9,12 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+@app.route('/crawler/users/get_id/<name>', methods=['POST', 'GET'])
+def get_users_info_by_displayed_name(name):
+    users = twitter.get_users_by_names([name])
+    return render_template('index.html', users=users)
+
+
 @app.route('/crawler/users/lookup/<int:list_ids>', methods=['POST', 'GET'])
 def get_users_info(list_ids):
     users = twitter.get_users_by_ids([list_ids])

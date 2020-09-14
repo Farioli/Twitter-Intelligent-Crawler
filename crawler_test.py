@@ -4,6 +4,7 @@ import user_profile_analyzer as upa
 import tweet_analyzer as ta
 import vocabolary as v
 import crawler_twitter_api as twitter
+import user_graph as g
 
 test_user_id = 2394975145
 
@@ -32,6 +33,8 @@ crawled_users.add_crawled_user(user5)
 vocabolary = v.Vocabolary()
 
 timeline =  twitter.get_user_timeline_by_id(test_user_id)
+
+graph = g.UserGraph()
 
 
 def test_crawling():
@@ -66,4 +69,9 @@ def test_tweet_analyzer():
     keywords = ta.extract_keywords_from_tweet(tweet.text, True)
     print(keywords)
 
-test_tweet_analyzer()
+# Test Graph
+def test_graph():
+    graph.add_user(user1)
+    print(graph.get_user(user1.id))
+
+test_graph()

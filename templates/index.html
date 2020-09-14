@@ -66,6 +66,7 @@
         {% if users|length > 0 %}
             <h3>Users</h3>
             {% for user in users %}
+                <div>Id: {{user.id}}</div>
                 <div>Bio: {{user.description}}</div>
                 <div>Created: {{user.created_at}}</div>
                 <div>Post: {{user.statuses_count}}</div>
@@ -92,6 +93,10 @@
                         <div>
                             <strong>Id: </strong>
                             {{tweet.id}}
+                        </div>
+                        <div>
+                            <strong>author: </strong>
+                            {{tweet.author}}
                         </div>
 
                     </li>
