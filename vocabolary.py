@@ -1,12 +1,15 @@
 # This class models the Vk of the crawler, built on the crawled users
 class Vocabolary:
+    
     # Sets of keywords and relative interest ratios
-    keywords
+    keywords : dict
+    
     def __init__(self):
         self.keywords = {}
 
-    def add_keyword(self, keyword) -> None:
-        self.keywords[keyword] = 0
+    def add_keyword(self, keyword: str) -> None:
+        if not keyword in self.keywords:
+            self.keywords[keyword] = 0
 
     def get_keyword_interest_ratio(keyword :str) -> float:
         ir = 0

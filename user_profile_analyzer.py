@@ -1,6 +1,7 @@
-import nltk
+
 from dateutil.relativedelta import relativedelta
 from datetime import date
+import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize 
 
@@ -9,9 +10,6 @@ coeff_bio = 1
 coeff_features = 1
 coeff_indegree = 1
 coeff_outdegree = 1
-
-binned_followers = 0
-binned_followees = 0
 
 keywords_interest_treshold = 0.005
 
@@ -68,9 +66,12 @@ def analyze_user(user, crawled_users, vocabolary):
 
     # Calculate User Interest Ratio
     user_ir = calculate_user_priority(ir_bio, ir_act, ir_in, ir_out)
+    
     keywords = get_user_bio_keywords(bio, True)
 
-    return (user_ir, keywords)
+    user = UserData(user.id, False, keywords, binned_coeff_activity, binned_followers, binned_followees)
+
+    return (user_ir, user)
 
 '''
     Returns the interest ratio for the user bio
@@ -82,15 +83,15 @@ def analyze_bio(bio, vocabolary, filterStopwords) -> float:
 
     interest_ratio_bio = 0
 
-    bool isFirst = True
+    is_first = True
 
     for kw in bio_keywords:
         try:
             kw_interest = vocabolary.keywords[kw]
             if interest > keywords_interest_treshold:
-                if isFirst == True:
+                if is_first == True:
                     interest_ratio_bio = interest
-                    isFirst = False
+                    is_first = False
                 else:
                     interest_ratio_bio = interest_ratio_bio * kw_interest
         except:

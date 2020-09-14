@@ -1,5 +1,11 @@
 import crawler as crawler
 import crawled_users as cu
+import user_profile_analyzer as upa
+import tweet_analyzer as ta
+import vocabolary as v
+import crawler_twitter_api as twitter
+
+test_user_id = 2394975145
 
 # crawled_users_example = [
 #     (1, False, ['palla', 'gino', 'spettacolo', 'casa'], 1, 3),
@@ -23,6 +29,10 @@ crawled_users.add_crawled_user(user3)
 crawled_users.add_crawled_user(user4)
 crawled_users.add_crawled_user(user5)
 
+vocabolary = v.Vocabolary()
+
+timeline =  twitter.get_user_timeline_by_id(test_user_id)
+
 
 def test_crawling():
     crawler.crawling("Yu-Gi-Oh", [(1, 0.87), (1046814112594976768, 0.89), (3, 0.23), (4, 0.25)])
@@ -43,5 +53,17 @@ def test_get_goal_user_by_keywords():
     print(len(palla_goal) == 1)
     print(len(sole_goal) == 0)
 
+# TEST
+def tagme_test():
+    lunch_annotations = tagme.annotate("My favourite meal is Mexican burritos.")
 
-test_get_goal_user()
+    # Print annotations with a score higher than 0.1
+    for ann in lunch_annotations.get_annotations(0.1):
+        print(ann)
+
+def test_tweet_analyzer():
+    tweet = timeline[0]
+    keywords = ta.extract_keywords_from_tweet(tweet.text, True)
+    print(keywords)
+
+test_tweet_analyzer()

@@ -38,7 +38,7 @@ def get_users_by_ids(user_ids):
 '''
 def get_user_timeline_by_id(user_id):
     timeline = api.user_timeline(id=user_id)
-    print(timeline)
+    # Debug print(timeline)
     return timeline
 
 # WEAK TIES

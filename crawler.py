@@ -2,7 +2,7 @@ import crawler_twitter_api as twitter
 import user_profile_analyzer as user_analyzer
 import crawled_users as cu
 import vocabolary as v
-
+import tweet_analyzer as ta
 
 # interesting user / total user analyzed
 prEp = 1
@@ -49,15 +49,14 @@ def crawling(predicate, seeds):
     #1 - Pop the top user (highest It) from q1 (frontier)
     next_user = get_max_priority_from_queue(frontier)
 
-    user = twitter.get_users_by_ids([next_user[0]])
+    user_data = twitter.get_users_by_ids([next_user[0]])
     
-    priority_q2, new_keywords = user_analyzer.analyze_user(user[0], crawled_users, vocabolary)
+    priority_q2, new_crawl_user = user_analyzer.analyze_user(user_data[0], crawled_users, vocabolary)
 
-    q2.append((user, priority_q2))
+    q2.append((user_id, priority_q2))
     
-    for key in new_keywords:
-        if not key in vocabolary:
-            vocabolary.append(key)
+    for key in new_crawl_user.keywords:
+        vocabolary.keywords.add_keyword(key)
 
     print(vocabolary)
     print(q2)
@@ -84,6 +83,13 @@ def crawling(predicate, seeds):
 def predicate_function(tweet, predicate):
     #TODO: search predicate in tweet and tweet contents
     results = 0
+
+    keywords = ta.extract_keywords_from_tweet(tweet, True)
+
+    for word in predicate:
+        if word in keywords:
+            results = 1
+            break
 
     return results
 

@@ -2,9 +2,15 @@
 import tagme
 
 # Boilerpy3 references: https://pypi.org/project/boilerpy3/
-import boilerpy3
-
+from boilerpy3 import extractors
 import json
+import re
+
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize 
+
+annotation_score_treshold = 0.1
 
 
 with open("config.json") as json_data_file:
@@ -28,10 +34,57 @@ def get_users_from_tweet(tweet):
         user_ids.append(mention["id"])
     return user_ids
 
-# TEST
-def tagme_test():
-    lunch_annotations = tagme.annotate("My favourite meal is Mexican burritos.")
+# Get the keywords of the text
+def extract_keywords_from_tweet(text: str, filterStopwords: bool) -> set:
 
-    # Print annotations with a score higher than 0.1
-    for ann in lunch_annotations.get_annotations(0.1):
-        print(ann)
+    extractor = extractors.ArticleExtractor()
+
+    keywords = set()
+    links = get_urls_from_text(text)
+    print("Debug: number of links:"+ str(len(links)))
+    
+    # # Clean from http
+    # for key in keywords:
+    #     if key in links:
+    #         keywords.remove(key)
+    for url in links:
+        text = text.replace(url, "")
+
+    text = text.replace(",", " ")
+    keywords = text.split(" ")
+
+
+    if filterStopwords == True :
+        print("Filtering stopwords...")
+        # Delete stopwords from text
+        stop_words = stopwords.words('english')
+        word_tokens = word_tokenize(text) 
+        filtered_sentence = set()
+
+        for w in word_tokens: 
+            if w not in stop_words: 
+                filtered_sentence.add(w) 
+        keywords = filtered_sentence
+
+    
+    
+    for url in links:
+        print("Url" + str(url))
+        try:
+            external_content = extractor.get_content_from_url(url)
+            print(external_content)
+            annotations = tagme.annotate(external_content)
+            for ann in annotations.get_annotations(annotation_score_treshold):
+                keywords.add(ann)
+        except:
+            pass
+
+    return keywords
+
+# Returns the list of url contained in a text
+def get_urls_from_text(text:str) -> list:
+    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+    url = re.findall(regex, text)       
+    return [x[0] for x in url] 
+
+
