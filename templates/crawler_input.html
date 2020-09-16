@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Crawler functions test</title>
+{% endblock %}
+
+{% block body %}
+
+<a href="/">Back</a>
+
+<h1>
+    Crawler input
+</h1>
+
+<form action="/crawler/start/" method="POST">
+    <h6>Insert here arguments to search (separated by whitespace)</h6>
+    <input type="text" name="predicate">
+    <input type="checkbox" name="stopwords"> Filter stopwords
+    <input id="submit" type="submit" value="Start crawl">
+    
+</form>
+
+{% endblock %}

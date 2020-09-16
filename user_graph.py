@@ -23,18 +23,24 @@ class UserGraph:
 
     # Returns users that points the specified users
     def get_user_parents(self, user_id:int):
-        parents_nodes = self.graph.predecessors(user_id)
-        parents_users = []
-        for node in parents_nodes:
-            user = self.graph.nodes[user_id]['user']
-            parents_users.append(user)
-        return parents_users
+        try:
+            parents_nodes = self.graph.predecessors(user_id)
+            parents_users = []
+            for node in parents_nodes:
+                user = self.graph.nodes[user_id]['user']
+                parents_users.append(user)
+            return parents_users
+        except:
+            return []
     
     # Returns users that are pointed by the specified users
     def get_user_siblings(self, user_id:int):
-        siblings_nodes = self.graph.successors(user_id)
-        siblings_users = []
-        for node in siblings_nodes:
-            user = self.graph.nodes[user_id]['user']
-            siblings_users.append(user)
-        return siblings_users
+        try:
+            siblings_nodes = self.graph.successors(user_id)
+            siblings_users = []
+            for node in siblings_nodes:
+                user = self.graph.nodes[user_id]['user']
+                siblings_users.append(user)
+            return siblings_users
+        except:
+            return []

@@ -1,9 +1,15 @@
 from flask import Flask, render_template, url_for, request, redirect
+import networkx as nx
 import crawler_twitter_api as twitter
 import tweet_analyzer as tweet_analyzer
 import user_profile_analyzer as user_analyzer
+import crawler as c
+from threading import Timer
 
 app = Flask(__name__)
+
+crawler = c.Crawler()
+test_seeds_videogames = [2394975145, 1269442129, 3153194140, 347831597, 15804774, 1220791675, 2421828871, 1098024347611029504, 18927441, 7157132]
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
@@ -45,6 +51,28 @@ def get_list_subscribers(list_id):
     users = twitter.get_list_subscribers(list_id)
     return render_template('index.html', users=users)
 
+@app.route('/crawler/start/', methods=['POST'])
+def start_crawling():
+
+        try:
+            filterStopwords = False
+            predicate = request.form["predicate"]
+            # if request.form.get("stopwords") :
+            #     filterStopwords = True
+            
+            stat = Timer(2.0, go_to_crawler_stat)
+            crawler.startCrawling(predicate, test_seeds_videogames)
+            
+            # return render_template('crawler_stat.html', crawler=crawler)
+            
+            # return render_template('test.html', bioKeywords=keywords)
+        except:
+            return 'Error on starting crawler'
+
+@app.route('/crawler/get_stat/', methods=['GET'])
+def get_crawler_stat():
+    return render_template('crawler_stat.html', crawler=crawler)
+
 # Services test
 @app.route('/user/bio/test', methods=['GET', 'POST'])
 def calculate_user_bio_keywords():
@@ -78,3 +106,11 @@ def shutdown_server():
 def shutdown():
     shutdown_server()
     return 'Server shutting down...'
+
+# Support function to crawl start
+def go_to_crawler_stat():
+    return render_template('crawler_stat.html', crawler=crawler)
+
+@app.route('/crawler/input', methods=['GET'])
+def go_to_crawler_input():
+     return render_template('crawler_input.html')

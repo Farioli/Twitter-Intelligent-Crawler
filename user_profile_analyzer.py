@@ -4,6 +4,7 @@ from datetime import date
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize 
+import crawled_users as cu
 
 #TODO: must be input
 coeff_bio = 1
@@ -29,8 +30,8 @@ def logaritmic_binning(value):
 
 # First value is discarded (f = followers, F = followees)
 estimated_bin_activities = [0, 27.5, 24.9, 32.4, 13.8, 1.3]
-estimates_bin_f = [0, 1.91, 9.31, 33.14, 23.34, 32.40]
-estimates_bin_F = [0, 3.67, 13.39, 49.10, 24.22, 9.62]
+estimated_bin_f = [0, 1.91, 9.31, 33.14, 23.34, 32.40]
+estimated_bin_F = [0, 3.67, 13.39, 49.10, 24.22, 9.62]
 
 def get_year_since_creation(creation_date):
     return relativedelta(date.today(), creation_date).years
@@ -47,14 +48,14 @@ def analyze_user(user, crawled_users, vocabolary):
 
     # 1 - Calculate bio interest ratio
     bio = user.description
-    ir_bio = analyze_bio(bio, crawled_users, vocabolary, True)
+    ir_bio = analyze_bio(bio, vocabolary, True)
 
     # 2 - Calculate activities interest ratio
     date_creation = user.created_at
     num_post = user.statuses_count
     coeff_activity = num_post / get_year_since_creation(date_creation)
     binned_coeff_activity =  logaritmic_binning(coeff_activity)
-    ir_act = analyze_user_activities(binned_activities, crawled_users)
+    ir_act = analyze_user_activities(binned_coeff_activity, crawled_users)
 
     # 3 - Calculate indegree interest ratio
     binned_followers = logaritmic_binning(user.followers_count)
@@ -62,14 +63,14 @@ def analyze_user(user, crawled_users, vocabolary):
 
     # 4 - Calculate outdegree interest ratio
     binned_followees = logaritmic_binning(user.friends_count)
-    ir_out = alculate_user_followees_interest_ratio(binned_followees, crawled_users)
+    ir_out = calculate_user_followees_interest_ratio(binned_followees, crawled_users)
 
     # Calculate User Interest Ratio
     user_ir = calculate_user_priority(ir_bio, ir_act, ir_in, ir_out)
     
     keywords = get_user_bio_keywords(bio, True)
 
-    user = UserData(user.id, False, keywords, binned_coeff_activity, binned_followers, binned_followees)
+    user = cu.UserData(user.id, False, keywords, binned_coeff_activity, binned_followers, binned_followees)
 
     return (user_ir, user)
 
@@ -113,7 +114,10 @@ def analyze_user_activities(binned_coeff_activity, crawled_users) -> float:
     frequency_user_bin_goal = crawled_users.get_activities_bin_i_user_frequency(binned_coeff_activity, True)
     frequency_user_bin_no_goal = crawled_users.get_activities_bin_i_user_frequency(binned_coeff_activity, False)
 
-    interest_ratio_activities = ( (frequency_user_bin_goal / prob_act_bin_goal_user) + (frequency_user_bin_no_goal / prob_act_bin_no_goal_user) )
+    try:
+        interest_ratio_activities = ( (frequency_user_bin_goal / prob_act_bin_goal_user) + (frequency_user_bin_no_goal / prob_act_bin_no_goal_user) )
+    except:
+        interest_ratio_activities = 0
     return interest_ratio_activities
 
 
@@ -146,7 +150,7 @@ def tie_statistical_analysis(binned_followers, binned_followees):
     Returns If(Ep)
 '''
 def calculate_user_followers_interest_ratio(binned_followers:int, crawled_users) -> float:
-    prob_followers = estimated_bin_followers[binned_followers]
+    prob_followers = estimated_bin_f[binned_followers]
     goal_users_ratio = crawled_users.get_goal_user_ratio()
 
     # Event where user satisfies the predicate and has followers in the i followers bin
@@ -157,7 +161,10 @@ def calculate_user_followers_interest_ratio(binned_followers:int, crawled_users)
     frequency_user_bin_goal = crawled_users.get_followers_bin_i_user_frequency(binned_followers, True)
     frequency_user_bin_no_goal = crawled_users.get_followers_bin_i_user_frequency(binned_followers, False)
 
-    interest_followers = ( (frequency_user_bin_goal / prob_followers_bin_goal_user) + (frequency_user_bin_no_goal / prob_followers_bin_no_goal_user) )
+    try:
+        interest_followers = ( (frequency_user_bin_goal / prob_followers_bin_goal_user) + (frequency_user_bin_no_goal / prob_followers_bin_no_goal_user) )
+    except:
+        interest_followers = 0
     return interest_followers
 
 '''
@@ -165,8 +172,8 @@ def calculate_user_followers_interest_ratio(binned_followers:int, crawled_users)
 '''
 def calculate_user_followees_interest_ratio(followees_number, crawled_users) -> float:
 
-    binned_followers =  logaritmic_binning(followees_number)
-    prob_followees = estimated_bin_followees[binned_followees]
+    binned_followees =  logaritmic_binning(followees_number)
+    prob_followees = estimated_bin_F[binned_followees]
     goal_users_ratio = crawled_users.get_goal_user_ratio()
 
     # Event where user satisfies the predicate and has followees in the i followees bin
@@ -176,8 +183,11 @@ def calculate_user_followees_interest_ratio(followees_number, crawled_users) -> 
     # TODO: si potrebbe fare una cosa più furba
     frequency_user_bin_goal = crawled_users.get_followees_bin_i_user_frequency(binned_followees, True)
     frequency_user_bin_no_goal = crawled_users.get_followees_bin_i_user_frequency(binned_followees, False)
-
-    interest_followers = ( (frequency_user_bin_goal / prob_followees_bin_goal_user) + (frequency_user_bin_no_goal / prob_followees_bin_no_goal_user) )
+    
+    try:
+        interest_followers = ( (frequency_user_bin_goal / prob_followees_bin_goal_user) + (frequency_user_bin_no_goal / prob_followees_bin_no_goal_user) )
+    except:
+        interest_followers = 0
     return interest_followers
 
 # UTILITIES FUNCTIONS

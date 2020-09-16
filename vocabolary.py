@@ -29,10 +29,19 @@ class Vocabolary:
 
         for key in self.keywords:
             # Pr(Ep AND wi)
-            word_goal_ratio = len(crawled_users.get_goal_user_list_by_keyword(key)) / number_of_users
+            try:
+                word_goal_ratio = len(crawled_users.get_goal_user_list_by_keyword(key)) / number_of_users
+            except:
+                word_goal_ratio = 0
 
             #Pr(wi)
-            word_ratio = len(crawled_users.get_user_with_keyword(key)) / number_of_users
+            try:
+                word_ratio = len(crawled_users.get_user_with_keyword(key)) / number_of_users
+            except:
+                word_ratio = 0
 
-            interest_keyword = word_goal_ratio / ( goal_ratio * word_ratio )
+            try:
+                interest_keyword = word_goal_ratio / ( goal_ratio * word_ratio )
+            except:
+                interest_keyword = 0
             self.keywords[key] = interest_keyword

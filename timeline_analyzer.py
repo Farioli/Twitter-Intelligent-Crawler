@@ -6,8 +6,8 @@ import crawler_twitter_api as api
 
 coeff_micropost = 1
 coeff_cohesiveness = 0
+coeff_parents = 1
 coeff_siblings = 1
-coeff_siblings_2 = 1
 
 bin_cohesiveness = 0
 
@@ -15,9 +15,9 @@ keywords_interest_treshold = 0.005
 goal_treshold = 1
 
 def bin_cohesiveness(cohesiveness):
-    if value < 0.20:
+    if cohesiveness < 0.20:
         return 1
-    if value <= 0.25:
+    if cohesiveness <= 0.25:
         return 2
     # value beetween 0.26 and 1
     return 3
@@ -25,13 +25,13 @@ def bin_cohesiveness(cohesiveness):
 estimates_cohesiveness = [0, 33.74, 37.11, 29.15]
 
 '''
-    This is called after a timeline is available from a choosen user from q2
+    This is called after a timeline is available from a choosen user from Q2
     Returns: 
     - list of new users
     - if the current user is goal
     - list of goal tweets
 '''
-def analyze_timeline(timeline, vocabolary, predicate: str, user_id: int, user_graph, users_goal_ratio: FloatingPointError) -> bool, list,  list:
+def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: int, user_graph, users_goal_ratio: float) -> (bool, list, list):
 
     is_goal = False
     mentions_users = []
@@ -45,11 +45,13 @@ def analyze_timeline(timeline, vocabolary, predicate: str, user_id: int, user_gr
     ir_siblings_2 = 0 #IF interest_ratio_outdegree
 
     # 1 Analyze the content interest ratio
-    ir_post, goal_tweets, mentions = calculate_content_interest_ratio(timeline, vocabolary)
+    ir_post, goal_tweets, mentions = calculate_content_interest_ratio(timeline, vocabolary, predicate_keywords)
 
     # 2 Calculate the cohesiveness ratio
     binned_cohesiveness = calculate_lexical_cohesion()
-    ir_coh = calculate_cohesiveness_interest_ratio()
+    # TODO
+    # ir_coh = calculate_cohesiveness_interest_ratio()
+    ir_coh = 0
 
     #3 Calculate the social tie interest ratio
     ir_parents = calculate_parent_interest_ratio(user_id, user_graph, users_goal_ratio)
@@ -57,7 +59,7 @@ def analyze_timeline(timeline, vocabolary, predicate: str, user_id: int, user_gr
     ir_siblings = calculate_siblings_interest_ratio(user_id, user_graph, users_goal_ratio)
 
     #4 
-    interest_ratio_timeline = calculate_timeline_interest_ratio(ir_post, ir_coh, )
+    interest_ratio_timeline = calculate_timeline_interest_ratio(ir_post, ir_coh, ir_parents, ir_siblings)
 
     # Frontier Exploring
     if is_goal == True:
@@ -69,13 +71,13 @@ def analyze_timeline(timeline, vocabolary, predicate: str, user_id: int, user_gr
     Return interest ratio fro the timeline
     It is also the priority attribute to new user in the
 '''
-def calculate_timeline_interest_ratio():
-    ir_timeline = [(coeff_micropost * ir_micropost) + (coeff_cohesiveness * ir_cohesiveness) + (coeff_siblings * ir_siblings) + (coeff_siblings_2 * ir_siblings_2)]
+def calculate_timeline_interest_ratio(ir_post, ir_coh, ir_parents, ir_siblings):
+    ir_timeline = [(coeff_micropost * ir_post) + (coeff_cohesiveness * ir_coh) + (coeff_parents * ir_parents) + (coeff_siblings * ir_siblings)]
     return ir_timeline
 
 
 # Content analysis of microposts
-def calculate_content_interest_ratio(timeline, vocabolary, predicate) -> (float, bool):
+def calculate_content_interest_ratio(timeline, vocabolary, predicate_keywords) -> (float, bool):
     is_goal = False
     goal_tweets = []
     mentions = []
@@ -85,7 +87,7 @@ def calculate_content_interest_ratio(timeline, vocabolary, predicate) -> (float,
     for tweet in timeline:
         
         # Find if is goal
-        if crawler.predicate_function(tweet, predicate) >= goal_treshold:
+        if crawler.predicate_function(tweet, predicate_keywords) >= goal_treshold:
             is_goal = True
             goal_tweets.add(tweet)
         tweet_ir, tweet_mentions = analyze_tweet(tweet, vocabolary)
@@ -93,7 +95,7 @@ def calculate_content_interest_ratio(timeline, vocabolary, predicate) -> (float,
         for mention in tweet_mentions:
             mentions.append(mention)
 
-        if is_first = True:
+        if is_first == True:
             interest_ratio_content = tweet_ir
         else:
             interest_ratio_content = interest_ratio_content * tweet_ir
@@ -101,9 +103,9 @@ def calculate_content_interest_ratio(timeline, vocabolary, predicate) -> (float,
     return interest_ratio_content, goal_tweets, mentions
 
 
-def analyze_tweet(tweet, vocabolary) -> float, list:
+def analyze_tweet(tweet, vocabolary) -> (float, list):
 
-    keywords = ta.extract_keywords_from_tweet(tweet.text)
+    keywords = ta.extract_keywords_from_tweet(tweet.text, True)
     interest_ratio_tweet = 0
     is_first = True
     tweet_mentions = ta.get_users_from_tweet(tweet)
@@ -135,7 +137,7 @@ def calculate_lexical_cohesion():
     return bin_cohesiveness(lexical_cohesion)
 
 def calculate_cohesiveness_interest_ratio():
-    prEci = estimates_cohesiveness(bin_cohesiveness)
+    prEci = estimates_cohesiveness[bin_cohesiveness]
     vci = goal_user_f_bin_i
     vci_negated = total_user_f_bin_i - goal_user_f_bin_i
 
@@ -170,14 +172,24 @@ def calculate_parent_interest_ratio(user_id, user_graph, users_goal_ratio) -> fl
 
 
     # Frequency of: user satisfies the predicate & points to user_id
-    number_goal_parents = len(goal_parents)
-    vEpEp = number_goal_parents / len(parents)
+    try:
+        number_goal_parents = len(goal_parents)
+        vEpEp = number_goal_parents / len(parents)
+        frequency_parents_goal = (vEpEp / (users_goal_ratio * users_goal_ratio)) ** number_goal_parents 
+    except:
+        frequency_parents_goal = 0
+
 
     # Frequency of: user not satisfies the predicate & point to user_id
-    number_no_goal_parents = len(parents) - len(goal_parents)
-    vNotEpEp = number_no_goal_parents / len(parents)
+    try:
+        number_no_goal_parents = len(parents) - len(goal_parents)
+        vNotEpEp = number_no_goal_parents / len(parents)
+        frequency_parents_no_goal = (vNotEpEp / ( (users_goal_ratio -1) * users_goal_ratio)) ** number_no_goal_parents
+    except:
+        frequency_parents_no_goal = 0
 
-    interest_ratio_parent = ( (vEpEp / (users_goal_ratio * users_goal_ratio)) ** number_goal_parents ) + ( (vNotEpEp / ( (users_goal_ratio -1) * users_goal_ratio)) ** number_no_goal_parents )
+    interest_ratio_parent = frequency_parents_goal + frequency_parents_no_goal
+    
     return interest_ratio_parent
 
 '''
@@ -194,7 +206,10 @@ def calculate_siblings_interest_ratio(user_id, user_graph, users_goal_ratio) -> 
         if user.is_goal == True:
             goal_siblings.append(user)
 
-    interest_ratio_siblings = ( len(siblings) / (len(goal_siblings) * users_goal_ratio ) )
+    try:
+        interest_ratio_siblings = ( len(siblings) / (len(goal_siblings) * users_goal_ratio ) )
+    except:
+        interest_ratio_siblings = 0
     return interest_ratio_siblings
 
 # EXPLORING THE FRONTIER

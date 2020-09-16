@@ -31,7 +31,10 @@ class CrawledUsers:
 
     # Return Ep
     def get_goal_user_ratio(self) -> float:
-       return len(crawled_users.get_goal_user_list()) / len(crawled_users.crawled_users)
+        try:
+            return len(self.get_goal_user_list()) / len(self.crawled_users)
+        except:
+            return 0
 
     # This is used to calculate Ep
     def get_goal_user_list(self) -> set:
@@ -81,14 +84,17 @@ class CrawledUsers:
     # This is used to calculate Va,i (isGoal = True) and !Va,i (isGoal = !True)
     def get_activities_bin_i_user_frequency(self, bin:int, is_goal: bool) -> float:
 
-        activities_total_users = get_user_with_bin_i_activities(bin)
-        activities_searched_user = []
+        try:
+            activities_total_users = self.get_user_with_bin_i_activities(bin)
+            activities_searched_user = []
 
-        for user in activities_total_users:
-            if user.is_goal == is_goal:
-                activities_searched_user.add(user)
+            for user in activities_total_users:
+                if user.is_goal == is_goal:
+                    activities_searched_user.add(user)
 
-        return len(activities_searched_user) / len(activities_total_users)
+            return len(activities_searched_user) / len(activities_total_users)
+        except:
+            return 0
 
     # TIE STATISTICAL ANALYSIS: Followees    
 
@@ -105,14 +111,17 @@ class CrawledUsers:
     # This is used to calculate Va,i (isGoal = True) and !Va,i (isGoal = !True)
     def get_followers_bin_i_user_frequency(self, bin:int, is_goal: bool) -> float:
 
-        followers_total_users = get_user_with_bin_i_followers(bin)
-        followers_searched_user = []
+        try:
+            followers_total_users = get_user_with_bin_i_followers(bin)
+            followers_searched_user = []
 
-        for user in followers_total_users:
-            if user.is_goal == is_goal:
-                followers_searched_user.add(user)
+            for user in followers_total_users:
+                if user.is_goal == is_goal:
+                    followers_searched_user.add(user)
 
-        return len(followers_searched_user) / len(followers_total_users)
+            return len(followers_searched_user) / len(followers_total_users)
+        except:
+            return 0
 
     # TIE STATISTICAL ANALYSIS: Followers
 
@@ -128,12 +137,14 @@ class CrawledUsers:
 
     # This is used to calculate Va,i (isGoal = True) and !Va,i (isGoal = !True)
     def get_followees_bin_i_user_frequency(self, bin:int, is_goal: bool) -> float:
+        try:
+            followees_total_users = get_user_with_bin_i_followees(bin)
+            followees_searched_user = []
 
-        followees_total_users = get_user_with_bin_i_followees(bin)
-        followees_searched_user = []
+            for user in followees_total_users:
+                if user.is_goal == is_goal:
+                    followees_searched_user.add(user)
 
-        for user in followees_total_users:
-            if user.is_goal == is_goal:
-                followees_searched_user.add(user)
-
-        return len(followees_searched_user) / len(followees_total_users)
+            return len(followees_searched_user) / len(followees_total_users)
+        except:
+            return 0

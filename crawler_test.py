@@ -5,8 +5,11 @@ import tweet_analyzer as ta
 import vocabolary as v
 import crawler_twitter_api as twitter
 import user_graph as g
+import embeddings as embs
 
-test_user_id = 2394975145
+test_user_id = 1098024347611029504
+
+test_seeds_videogames = [2394975145, 1269442129, 3153194140, 347831597, 15804774, 1220791675, 2421828871, 1098024347611029504, 18927441, 7157132]
 
 # crawled_users_example = [
 #     (1, False, ['palla', 'gino', 'spettacolo', 'casa'], 1, 3),
@@ -38,7 +41,7 @@ graph = g.UserGraph()
 
 
 def test_crawling():
-    crawler.crawling("Yu-Gi-Oh", [(1, 0.87), (1046814112594976768, 0.89), (3, 0.23), (4, 0.25)])
+    crawler.crawling("Videogames", test_seeds_videogames, 60)
 
 def test_get_frontier_best_user():
     frontier = [(1, 0.87), (2, 0.89), (3, 0.23), (4, 0.25)]
@@ -74,4 +77,9 @@ def test_graph():
     graph.add_user(user1)
     print(graph.get_user(user1.id))
 
-test_graph()
+# Test Embeddings 
+def test_embeddings():
+    model = embs.get_embeddings_model_from_timeline(timeline)
+    print(embs.get_word_embeddings(model, "catch"))
+
+test_embeddings()

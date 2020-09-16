@@ -2,92 +2,116 @@ import crawler_twitter_api as twitter
 import user_profile_analyzer as user_analyzer
 import crawled_users as cu
 import vocabolary as v
+import timeline_analyzer as timeline
 import tweet_analyzer as ta
+import threading
+import user_graph as g
 
 # interesting user / total user analyzed
 prEp = 1
 
 q2 = []
-q3 = []
-q4 = []
-q5 = []
-q6 = []
 
 retrieved_tweets = []
 output_tweets = []
+timeout = False
+
+def onTimeout():
+    timeout = True
 
 '''
     Seeds is a list of twitter user ids
 '''
-def crawling(predicate, seeds):
+def crawling(predicate: str, seeds : list, max_time: float):
+
+    timeout = False
+    timer = threading.Timer(max_time, onTimeout)
 
     predicate_keywords = []
     vocabolary = v.Vocabolary()
-
-    #Test
-    seeds = [(1, 0.87), (1046814112594976768, 0.89), (3, 0.23), (4, 0.25)]
-
-    # INITIALIZZATION
-    q2 = []
-    q3 = []
-    q4 = []
-    q5 = []
-    q6 = []
-    output_tweets = []
-    
+    graph = g.UserGraph()
 
     # Uf, q1 = frontier users - Each element must be a (user_id, priority)
     frontier = []
 
+    #Test
+    for el in seeds:
+        frontier.append((el, 0))
+
+    # INITIALIZZATION
+    q2 = []
+    output_tweets = []
+
+
     # Uc = Crawled users - Each elements must be: (user_id, goal, keywords, bin_followers, bin_followee)
     crawled_users = cu.CrawledUsers()
-    frontier = seeds
 
     # MAIN LOOP
 
+    while(timeout == False):
+        
+        #1 - Pop the top user (highest It) from q1 (frontier)
+        next_user = get_max_priority_from_queue(frontier)
 
-    #1 - Pop the top user (highest It) from q1 (frontier)
-    next_user = get_max_priority_from_queue(frontier)
+        user_data = twitter.get_users_by_ids([next_user[0]])
+        
+        #2 - Get the Ip from the user profile analysis and push the user in q2
+        priority_q2, new_crawl_user = user_analyzer.analyze_user(user_data[0], crawled_users, vocabolary)
 
-    user_data = twitter.get_users_by_ids([next_user[0]])
-    
-    priority_q2, new_crawl_user = user_analyzer.analyze_user(user_data[0], crawled_users, vocabolary)
+        q2.append((new_crawl_user, priority_q2))
+        
+        for key in new_crawl_user.keywords:
+            vocabolary.add_keyword(key)
 
-    q2.append((user_id, priority_q2))
-    
-    for key in new_crawl_user.keywords:
-        vocabolary.keywords.add_keyword(key)
+        # Update the keywords interest ratio
+        vocabolary.update_keywords_interest_ratio(crawled_users)
 
-    print(vocabolary)
-    print(q2)
-    
+        print(vocabolary)
+        print(q2)
+        
+        
 
-    #2 - Get the Ip from the user profile analysis and push the user in q2
+        #3 - Pop the top user in q2 (highest Ip)
+        next_user_for_timeline = get_max_priority_from_queue(q2)
+        q2_user = next_user_for_timeline[0]
+        
+        #4 - Analyize the timeline of the q2 user
+        user_timeline = twitter.get_user_timeline_by_id(q2_user.id)
 
-    #3 - Pop the top user in q2 (highest Ip)
+        is_goal, new_users, goal_tweets = timeline.analyze_timeline(user_timeline, vocabolary, predicate_keywords, q2_user.id, graph, crawled_users.get_goal_user_ratio())
 
-    #4 - Analyize the timeline of the q2 user
 
-    #5 - Add user to crawled users (Uc)
+        for u in new_users:
+            frontier.append(new_users)
 
-    # Update the keywords interest ratio
-    vocabolary.update_keywords_interest_ratio(crawled_users)
+        for t in goal_tweets:
+            output_tweets.append(t)
+
+        #5 - Add user to crawled users (Uc)
+        q2_user.is_goal = is_goal
+        crawled_users.add_crawled_user(q2_user)
+        graph.add_user(q2_user)
+        timout = True
+        
+        print(frontier)
+        print(q2)
 
 
     # return tweets
+    print(output_tweets)
 
 '''
     ft : T -> {0,1}
     Returns 1 if the tweet satisfies the user's predicate
 '''
-def predicate_function(tweet, predicate):
+def predicate_function(tweet, predicate_keywords):
     #TODO: search predicate in tweet and tweet contents
     results = 0
 
-    keywords = ta.extract_keywords_from_tweet(tweet, True)
+    keywords = ta.extract_keywords_from_tweet(tweet.text, True)
 
-    for word in predicate:
-        if word in keywords:
+    for key in keywords:
+        if key.lower() in predicate_keywords:
             results = 1
             break
 
@@ -123,3 +147,123 @@ def get_max_priority_from_queue(user_queue):
 
 def calculate_cralwer_output(number_of_results):
     return "todo"
+
+class Crawler:
+    timeout : bool
+    predicate_keywords = []
+    frontier = []
+    timeline_queue = []
+    vocabolary = v.Vocabolary()
+    # Uc = Crawled users - Each elements must be: (user_id, goal, keywords, bin_followers, bin_followee)
+    crawled_users = cu.CrawledUsers()
+    graph = g.UserGraph()
+    output_tweets = []
+
+    def __init__(self) :
+        self.predicate_keywords = []
+        self.frontier = []
+        self.timeline_queue = []
+        self.vocabolary = v.Vocabolary()
+        # Uc = Crawled users - Each elements must be: (user_id, goal, keywords, bin_followers, bin_followee)
+        self.crawled_users = cu.CrawledUsers()
+        self.graph = g.UserGraph()
+        self.output_tweets = []
+        self.timeout = False
+
+    def startCrawling(self, predicate, seeds):
+
+        self.timeout = False
+        # timer = threading.Timer(max_time, onTimeout)
+
+        temp_predicate = predicate.split(" ")
+        for w in temp_predicate:
+            self.predicate_keywords.append(w.lower())
+
+        print("PREDICATE KEYWORDS" + str(len(self.predicate_keywords)))
+
+        for keyword in self.predicate_keywords:
+            print("Keyword:" + str(keyword))
+
+        self.vocabolary = v.Vocabolary()
+        self.graph = g.UserGraph()
+
+        # Uf, q1 = frontier users - Each element must be a (user_id, priority)
+        self.frontier = []
+
+        #Test
+        for el in seeds:
+            self.frontier.append((el, 0))
+
+        # INITIALIZZATION
+        self.timeline_queue = []
+        self.output_tweets = []
+
+
+        # Uc = Crawled users - Each elements must be: (user_id, goal, keywords, bin_followers, bin_followee)
+        self.crawled_users = cu.CrawledUsers()
+
+        # MAIN LOOP
+
+        while self.timeout == False or self.get_crawled_user_length() == 50 :
+            
+            #1 - Pop the top user (highest It) from q1 (frontier)
+            next_user = get_max_priority_from_queue(self.frontier)
+            try:
+                user_data = twitter.get_users_by_ids([next_user[0]])
+                
+                #2 - Get the Ip from the user profile analysis and push the user in timeline_queue
+                priority_q2, new_crawl_user = user_analyzer.analyze_user(user_data[0], self.crawled_users, self.vocabolary)
+
+                self.timeline_queue.append((new_crawl_user, priority_q2))
+                
+                for key in new_crawl_user.keywords:
+                    self.vocabolary.add_keyword(key)
+            except:
+                print("User deleted")
+                pass
+                
+                
+
+            #3 - Pop the top user in q2 (highest Ip)
+            next_user_for_timeline = get_max_priority_from_queue(self.timeline_queue)
+            try:
+                q2_user = next_user_for_timeline[0]
+                
+                #4 - Analyize the timeline of the q2 user
+                user_timeline = twitter.get_user_timeline_by_id(q2_user.id)
+
+                is_goal, new_users, goal_tweets = timeline.analyze_timeline(user_timeline, self.vocabolary, self.predicate_keywords, q2_user.id, self.graph, self.crawled_users.get_goal_user_ratio())
+
+
+                for u in new_users:
+                    self.frontier.append(new_users)
+
+                for t in goal_tweets:
+                    self.output_tweets.append(t)
+
+                #5 - Add user to crawled users (Uc)
+                q2_user.is_goal = is_goal
+                self.crawled_users.add_crawled_user(q2_user)
+                # Update the keywords interest ratio
+                self.vocabolary.update_keywords_interest_ratio(self.crawled_users)
+                self.graph.add_user(q2_user)
+                # self.timout = True
+            except:
+                print("ERROR: USER DELETED")
+                pass
+
+
+        # return tweets
+        print("Output tweets:" + output_tweets)
+
+    def stop_crawl(self):
+        self.timeout = True
+
+    def get_crawled_user_length(self):
+        return len(self.crawled_users.crawled_users)
+
+    def get_frontier_length(self):
+        return len(self.frontier)
+
+    def get_timeline_queue_length(self):
+        return len(self.timeline_queue)
