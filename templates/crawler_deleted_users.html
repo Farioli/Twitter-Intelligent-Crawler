@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Crawler State in Real Time</title>
+{% endblock %}
+
+{% block body %}
+
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-12 text-left">
+            <a href="/crawler/stats/">Back</a>
+        </div>
+        <div class="col-12">
+            <h1>
+                Deleted Users : {{crawler.get_deleted_users_length()}}
+            </h1>
+        </div>
+    </div>
+    <div class="row">
+        {% if deletedUsers|length > 0 %}
+        <div class="col-12">
+            <table class="table">
+                <tr>
+                    <th>User ID</th>
+                    <th>Motivation</th>
+                </tr>
+                {% for del_user in deletedUsers %}
+                <tr>
+                    <td>{{del_user.user.id}}</td>
+                    <td>{{del_user.exception}}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
