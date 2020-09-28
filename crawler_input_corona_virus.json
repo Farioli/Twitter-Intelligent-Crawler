@@ -1,0 +1,26 @@
+{
+    "seeds" : [
+        2542207489, 
+        1232399877558198275, 
+        1192235118557089798, 
+        1221555599894372352,
+        25073877,
+        44783853,
+        146569971,
+        428333,
+        2914144864,
+        2467791
+    ],
+    "crawlingSeconds": 600,
+    "predicate": "covid-19 virus corona virus corona #covid-19 corona-virus",
+    "predicate_keywords" : ["covid-19", "virus", "corona virus", "corona", "#covid-19", "corona-virus"],
+    "coeff_bio" : 1.0,
+    "coeff_features" : 1.0,
+    "coeff_indegree" : 1.0,
+    "coeff_outdegree" : 1.0,
+    "coeff_micropost" : 1.0,
+    "coeff_cohesiveness": 1.0,
+    "coeff_parents" : 1.0,
+    "coeff_siblings" : 1.0
+
+}

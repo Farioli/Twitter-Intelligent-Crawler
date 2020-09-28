@@ -7,6 +7,8 @@ import tweet_analyzer as ta
 import threading
 import user_graph as g
 import time
+import sys
+import json
 
 # interesting user / total user analyzed
 prEp = 1
@@ -223,17 +225,23 @@ class Crawler:
         self.crawled_users = cu.CrawledUsers()
 
         # MAIN LOOP
-        while self.is_time_remained() and self.get_crawled_user_length() <= 50:
+        while self.is_time_remained():
+
+            print("=== New Crawler Step ===")
 
             if len(self.frontier) > 0:
                 # 1 - Pop the top user (highest It) from q1 (frontier)
                 next_user = get_max_priority_from_queue(self.frontier)
                 try:
+                    print("Analyzing user with id:" + str(next_user[0]))
+                    
                     user_data = twitter.get_users_by_ids([next_user[0]])
 
                     # 2 - Get the Ip from the user profile analysis and push the user in timeline_queue
                     priority_q2, new_crawl_user = user_analyzer.analyze_user(
                         user_data[0], self.crawled_users, self.vocabolary)
+
+                    print("Adding " + str(new_crawl_user.id) + "with priority "+ str(priority_q2) +" to q2")
 
                     self.timeline_queue.append((new_crawl_user, priority_q2))
 
@@ -250,6 +258,8 @@ class Crawler:
                     self.timeline_queue)
                 try:
                     q2_user = next_user_for_timeline[0]
+
+                    print("Analyzing user: "+ str(q2_user.id))
 
                     # 4 - Analyize the timeline of the q2 user
                     user_timeline = twitter.get_user_timeline_by_id(q2_user.id)
@@ -270,12 +280,18 @@ class Crawler:
                     # Update the keywords interest ratio
                     self.vocabolary.update_keywords_interest_ratio(
                         self.crawled_users)
+                    
                     self.graph.add_user(q2_user)
-                    # self.timout = True
+                    
                 except Exception as e:
                     self.deleted_users.append(
                         (next_user_for_timeline, e.__class__))
-                    pass
+                    print("Error on extracting user from q2")
+
+            print("End of one crawler step.\n")
+            print("Remaining in frontier: "+ str(len(self.frontier)) +"\n")
+            print("Remaining in timeline queue: "+ str(len(self.timeline_queue)) +"\n")
+            print("==================================================================")
 
         self.is_crawling = False
 
@@ -303,3 +319,31 @@ class Crawler:
 
     def get_deleted_users_length(self):
         return len(self.deleted_users)
+
+
+def main():
+    if len(sys.argv) != 2:
+        print("Insert the parameters json, please")
+        return
+
+    #parse the parameters json input
+    try:
+        with open(sys.argv[1]) as parameters_json:
+            parameters_dict = json.load(parameters_json)
+            predicate = parameters_dict["predicate"]
+            seeds = parameters_dict["seeds"]
+            total_seconds = parameters_dict["crawlingSeconds"]
+    except:
+        print("Error taking the parameters from json")
+        return
+    
+    crawler = Crawler()
+
+    try:
+        print("Starting")
+        crawler.startCrawling(predicate, seeds, total_seconds)
+    except:
+        print("Error starting the crawler")
+
+if __name__ == "__main__":
+    main()

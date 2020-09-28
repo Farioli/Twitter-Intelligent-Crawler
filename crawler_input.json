@@ -1,0 +1,15 @@
+{
+    "seeds" : [],
+    "crawlingSeconds": 0,
+    "predicate": "",
+    "predicate_keywords" : [],
+    "coeff_bio" : 1.0,
+    "coeff_features" : 1.0,
+    "coeff_indegree" : 1.0,
+    "coeff_outdegree" : 1.0,
+    "coeff_micropost" : 1.0,
+    "coeff_cohesiveness": 1.0,
+    "coeff_parents" : 1.0,
+    "coeff_siblings" : 1.0
+
+}

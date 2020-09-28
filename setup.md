@@ -23,7 +23,7 @@ Package dependencies:
 
 # How use the crawler
 
-0. Activate the virtualenv
+0. Activate the virtualenv (source /../ML_SII_Project/env/bin/activate)
 
 1. Start the "app.py" file by usign the comand "flusk run" and use the webapp functions
 or

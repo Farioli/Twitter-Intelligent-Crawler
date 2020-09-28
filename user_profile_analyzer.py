@@ -5,6 +5,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize 
 import crawled_users as cu
+import pdb
 
 #TODO: must be input
 coeff_bio = 1
@@ -53,7 +54,11 @@ def analyze_user(user, crawled_users, vocabolary):
     # 2 - Calculate activities interest ratio
     date_creation = user.created_at
     num_post = user.statuses_count
-    coeff_activity = num_post / get_year_since_creation(date_creation)
+    try:
+        coeff_activity = num_post / get_year_since_creation(date_creation)
+    except:
+        coeff_activity = 0
+
     binned_coeff_activity =  logaritmic_binning(coeff_activity)
     ir_act = analyze_user_activities(binned_coeff_activity, crawled_users)
 

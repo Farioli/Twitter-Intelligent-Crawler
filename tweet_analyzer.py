@@ -62,7 +62,6 @@ def extract_keywords_from_tweet(text: str, filterStopwords: bool) -> set:
             keywords.remove(key)
 
     if filterStopwords == True:
-        # print("Filtering stopwords...")
         # Delete stopwords from text
         stop_words = stopwords.words('english')
         word_tokens = word_tokenize(text)
@@ -74,13 +73,20 @@ def extract_keywords_from_tweet(text: str, filterStopwords: bool) -> set:
         keywords = filtered_sentence
 
     for url in links:
-        # print("Url" + str(url))
         try:
             external_content = extractor.get_content_from_url(url)
-            annotations = tagme.annotate(external_content)
-            for ann in annotations.get_annotations(annotation_score_treshold):
-                print(ann)
-                keywords.add(ann.entity_title)
+            # Debug
+            # print("External content:" + external_content)
+            if external_content != "":
+                try:
+                    annotations = tagme.annotate(external_content)
+                    for ann in annotations.get_annotations(annotation_score_treshold):
+                        #
+                        # 
+                        # print(ann)
+                        keywords.add(ann.entity_title)
+                except:
+                    print("Error with tagme, skipping")
         except:
             pass
 
