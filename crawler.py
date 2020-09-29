@@ -215,33 +215,33 @@ class Crawler:
         output_file.truncate(0)
 
         # MAIN LOOP
-        while self.is_time_remained() and (len(self.frontier) > 0):
+        while self.is_time_remained() and self.are_more_users_to_crawl():
 
             print("=== New Crawler Step ===")
 
             if len(self.frontier) > 0:
                 # 1 - Pop the top user (highest It) from q1 (frontier)
-                next_user = get_max_priority_from_queue(self.frontier)
-                try:
-                    print("Analyzing user with id:" + str(next_user[0]))
-                    
-                    user_data = twitter.get_users_by_ids([next_user[0]])
+                next_users = self.get_top_100_users_from_frontier()
+                #try:
+                print("Analyzing "+ str(len(next_users)) +" profiles")
+                users_data = twitter.get_users_by_ids(next_users)
+                
+                for user in users_data:
 
                     # 2 - Get the Ip from the user profile analysis and push the user in timeline_queue
-                    priority_q2, new_crawl_user = user_analyzer.analyze_user(
-                        user_data[0], self.crawled_users, self.vocabolary)
+                    priority_q2, new_crawl_user = user_analyzer.analyze_user(user, self.crawled_users, self.vocabolary)
 
-                    
+                
                     self.timeline_queue.append((new_crawl_user, priority_q2))
                     print("Added " + str(new_crawl_user.id) + " with priority "+ str(priority_q2) + " to q2")
 
                     for key in new_crawl_user.keywords:
                         self.vocabolary.add_keyword(key)
-                except Exception as e:
-                    print(e)
-                    self.deleted_users.append(
-                        (next_user, e.__class__))
-                    pass
+                # except Exception as e:
+                #     print(e)
+                #     self.deleted_users.append(
+                #         (next_user, e.__class__))
+                #     pass
 
             if len(self.timeline_queue) > 0:
                 # 3 - Pop the top user in q2 (highest Ip)
@@ -312,6 +312,9 @@ class Crawler:
     def is_time_remained(self) -> bool:
         return (self.total_seconds_crawling - self.get_elapsed_time()) > 0
 
+    def are_more_users_to_crawl(self) -> bool:
+        return (len(self.frontier) >0) or (len(self.timeline_queue)>0)
+
     def stop_crawl(self):
         self.timeout = True
 
@@ -327,6 +330,20 @@ class Crawler:
     def get_deleted_users_length(self):
         return len(self.deleted_users)
 
+    def get_top_100_users_from_frontier(self):
+
+        sorted_frontier = sorted(self.frontier, key=lambda tup: tup[1], reverse=True)
+        self.frontier = sorted_frontier
+        results = []
+
+        count = 0
+        while count <= 100 and len(self.frontier) > 0:
+            user_to_crawl = self.frontier.pop(0)
+            results.append(user_to_crawl[0])
+            count += 1
+        return results
+
+
 # utility: get the user with max priority
 def get_max_priority_from_queue(user_queue):
 
@@ -339,6 +356,8 @@ def get_max_priority_from_queue(user_queue):
         return max_priority_user
     else:
         return "Empty!"
+
+
 
 def write_goal_tweet_on_results(tweet_text):
 
