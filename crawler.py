@@ -9,6 +9,7 @@ import user_graph as g
 import time
 import sys
 import json
+import pdb
 
 # interesting user / total user analyzed
 prEp = 1
@@ -87,7 +88,8 @@ def crawling(predicate: str, seeds: list, max_time: float):
             user_timeline, vocabolary, predicate_keywords, q2_user.id, graph, crawled_users.get_goal_user_ratio())
 
         for u in new_users:
-            frontier.append(new_users)
+            print(u)
+            frontier.append(u)
 
         for t in goal_tweets:
             output_tweets.append(t)
@@ -140,25 +142,6 @@ def user_function(user_id, predicate):
         if predicate_function(tweet.text, predicate) == 1:
             found = True
     return found
-
-# utility: get the user with max priority
-
-
-def get_max_priority_from_queue(user_queue):
-
-    if len(user_queue) > 0:
-        max_priority_user = user_queue[0]
-        for user in user_queue:
-            if user[1] > max_priority_user[1]:
-                max_priority_user = user
-        user_queue.remove(max_priority_user)
-        return max_priority_user
-    else:
-        return "Empty!"
-
-
-def calculate_cralwer_output(number_of_results):
-    return "todo"
 
 
 class Crawler:
@@ -224,8 +207,13 @@ class Crawler:
         # Uc = Crawled users - Each elements must be: (user_id, goal, keywords, bin_followers, bin_followee)
         self.crawled_users = cu.CrawledUsers()
 
+        # RESULTS FILE INIT
+        output_file = open("results.txt", "w+")
+        print("ACHTUNG: Deleting previous results!")
+        output_file.truncate(0)
+
         # MAIN LOOP
-        while self.is_time_remained():
+        while self.is_time_remained() and (len(self.frontier) > 0):
 
             print("=== New Crawler Step ===")
 
@@ -241,62 +229,75 @@ class Crawler:
                     priority_q2, new_crawl_user = user_analyzer.analyze_user(
                         user_data[0], self.crawled_users, self.vocabolary)
 
-                    print("Adding " + str(new_crawl_user.id) + "with priority "+ str(priority_q2) +" to q2")
-
+                    
                     self.timeline_queue.append((new_crawl_user, priority_q2))
+                    print("Added " + str(new_crawl_user.id) + " with priority "+ str(priority_q2) + " to q2")
 
                     for key in new_crawl_user.keywords:
                         self.vocabolary.add_keyword(key)
-                except:
+                except Exception as e:
+                    print(e)
                     self.deleted_users.append(
                         (next_user, e.__class__))
                     pass
 
             if len(self.timeline_queue) > 0:
                 # 3 - Pop the top user in q2 (highest Ip)
-                next_user_for_timeline = get_max_priority_from_queue(
-                    self.timeline_queue)
-                try:
-                    q2_user = next_user_for_timeline[0]
+                next_user_for_timeline = get_max_priority_from_queue(self.timeline_queue)
+                
+                # pdb.set_trace()
+                q2_user = next_user_for_timeline[0]
+                print("Analyzing user: "+ str(q2_user.id))
 
-                    print("Analyzing user: "+ str(q2_user.id))
+                # try:
 
-                    # 4 - Analyize the timeline of the q2 user
-                    user_timeline = twitter.get_user_timeline_by_id(q2_user.id)
+                # 4 - Analyize the timeline of the q2 user
+                user_timeline = twitter.get_user_timeline_by_id(q2_user.id)
 
-                    is_goal, new_users, goal_tweets = timeline.analyze_timeline(
-                        user_timeline, self.vocabolary, self.predicate_keywords, q2_user.id, self.graph, self.crawled_users.get_goal_user_ratio())
+                is_goal, new_users, goal_tweets = timeline.analyze_timeline(
+                    user_timeline, self.vocabolary, self.predicate_keywords, q2_user.id, self.graph, self.crawled_users.get_goal_user_ratio())
+
+                print("Is goal:"+ str(is_goal))
+                if is_goal:
+                    
 
                     for u in new_users:
-                        self.frontier.append(new_users)
+                        self.frontier.append(u)
+                    print("New users: +"+ str(len(new_users)))
 
                     for t in goal_tweets:
                         self.output_tweets.append(t)
+                        output_file.write(t.text+"\n")
 
-                    # 5 - Add user to crawled users (Uc)
-                    q2_user.is_goal = is_goal
-                    self.crawled_users.add_crawled_user(q2_user)
+                # 5 - Add user to crawled users (Uc)
+                q2_user.is_goal = is_goal
+                self.crawled_users.add_crawled_user(q2_user)
 
-                    # Update the keywords interest ratio
-                    self.vocabolary.update_keywords_interest_ratio(
-                        self.crawled_users)
+                # Update the keywords interest ratio
+                self.vocabolary.update_keywords_interest_ratio(
+                    self.crawled_users)
+                
+                self.graph.add_user(q2_user)
                     
-                    self.graph.add_user(q2_user)
-                    
-                except Exception as e:
-                    self.deleted_users.append(
-                        (next_user_for_timeline, e.__class__))
-                    print("Error on extracting user from q2")
+                # except Exception as e:
+                #     self.deleted_users.append(
+                #         (next_user_for_timeline, e.__class__))
+                #     print("Error on extracting user from q2")
+                #     print(e)
 
-            print("End of one crawler step.\n")
-            print("Remaining in frontier: "+ str(len(self.frontier)) +"\n")
-            print("Remaining in timeline queue: "+ str(len(self.timeline_queue)) +"\n")
-            print("==================================================================")
+            print("Remaining in frontier: "+ str(len(self.frontier)))
+            print("Remaining in timeline queue: "+ str(len(self.timeline_queue)))
+            print("Crawled users: "+ str(self.get_crawled_user_length())+ "\n")
+            print("User Graph Stat: nodes: "+ str(self.graph.graph.number_of_nodes()) + " edges: "+ str(self.graph.graph.number_of_edges()) + ";\n")
+            print("CRAWLING TIME: " + str(round(self.get_elapsed_time(), 2)) + "/ "+ str(self.total_seconds_crawling)+ " seconds")
+            print("==================================================================\n")
 
         self.is_crawling = False
 
         # return tweets
-        print("Output tweets:" + output_tweets)
+        # print("Output tweets:" + output_tweets)
+
+        output_file.close()
 
     def get_elapsed_time(self):
         now = time.time()
@@ -320,6 +321,19 @@ class Crawler:
     def get_deleted_users_length(self):
         return len(self.deleted_users)
 
+# utility: get the user with max priority
+def get_max_priority_from_queue(user_queue):
+
+    if len(user_queue) > 0:
+        max_priority_user = user_queue[0]
+        for user in user_queue:
+            if user[1] > max_priority_user[1]:
+                max_priority_user = user
+        user_queue.remove(max_priority_user)
+        return max_priority_user
+    else:
+        return "Empty!"
+
 
 def main():
     if len(sys.argv) != 2:
@@ -339,11 +353,9 @@ def main():
     
     crawler = Crawler()
 
-    try:
-        print("Starting")
-        crawler.startCrawling(predicate, seeds, total_seconds)
-    except:
-        print("Error starting the crawler")
+
+    print("Starting")
+    crawler.startCrawling(predicate, seeds, total_seconds)
 
 if __name__ == "__main__":
     main()

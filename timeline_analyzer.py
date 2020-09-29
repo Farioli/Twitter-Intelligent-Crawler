@@ -40,6 +40,7 @@ def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: in
     is_goal = False
     mentions_users = []
     new_users = []
+    retweet_users = []
 
     ir_post = 0  # Im, interest ratio for micropost's contents
     ir_cohesiveness = 0  # Ia interest_ratio_features
@@ -49,7 +50,7 @@ def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: in
     ir_siblings_2 = 0  # IF interest_ratio_outdegree
 
     # 1 Analyze the content interest ratio
-    ir_post, goal_tweets, mentions = calculate_content_interest_ratio(
+    ir_post, goal_tweets, mentions, retweet_users = calculate_content_interest_ratio(
         timeline, vocabolary, predicate_keywords)
 
     if len(goal_tweets) > 0:
@@ -69,12 +70,16 @@ def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: in
         user_id, user_graph, users_goal_ratio)
 
     # 4
-    interest_ratio_timeline = calculate_timeline_interest_ratio(
+    ir_timeline = calculate_timeline_interest_ratio(
         ir_post, ir_coh, ir_parents, ir_siblings)
+
+    print("> Results Timeline (IR: "+ str(ir_timeline) +"): IrPost: "+ str(ir_post)+ " IrCoh: "+ str(ir_coh)+ " IrPar: "+ str(ir_parents)+" IrSib: "+ str(ir_siblings))
 
     # Frontier Exploring
     if is_goal == True:
-        new_users = get_users_from_frontier(user_id, interest_ratio_timeline)
+        new_users = get_users_from_frontier(user_id, ir_timeline)
+        for userId in retweet_users:
+            new_users.append((userId, ir_timeline))
 
     return is_goal, new_users, goal_tweets
 
@@ -86,8 +91,7 @@ def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: in
 
 
 def calculate_timeline_interest_ratio(ir_post, ir_coh, ir_parents, ir_siblings):
-    ir_timeline = [(coeff_micropost * ir_post) + (coeff_cohesiveness * ir_coh) +
-                   (coeff_parents * ir_parents) + (coeff_siblings * ir_siblings)]
+    ir_timeline = (coeff_micropost * ir_post) + (coeff_cohesiveness * ir_coh) + (coeff_parents * ir_parents) + (coeff_siblings * ir_siblings)
     return ir_timeline
 
 
@@ -98,13 +102,19 @@ def calculate_content_interest_ratio(timeline, vocabolary, predicate_keywords) -
     mentions = []
     is_first = True
     interest_ratio_content = 0
+    retweeted_users = []
 
     for tweet in timeline:
 
         # Find if is goal
         if crawler.predicate_function(tweet.text, predicate_keywords) >= goal_treshold:
+            print("*** Found Goal Tweet: "+ str(tweet.id)+" ***")
             is_goal = True
-            goal_tweets.add(tweet)
+            goal_tweets.append(tweet)
+            retweeters = api.get_tweet_retweeted_users(tweet.id)
+            for user_id in retweeters:
+                retweeted_users.append(user_id)
+        
         tweet_ir, tweet_mentions = analyze_tweet(tweet, vocabolary)
 
         for mention in tweet_mentions:
@@ -115,7 +125,7 @@ def calculate_content_interest_ratio(timeline, vocabolary, predicate_keywords) -
         else:
             interest_ratio_content = interest_ratio_content * tweet_ir
 
-    return interest_ratio_content, goal_tweets, mentions
+    return interest_ratio_content, goal_tweets, mentions, retweeted_users
 
 
 def analyze_tweet(tweet, vocabolary) -> (float, list):
@@ -159,8 +169,7 @@ def calculate_cohesiveness_interest_ratio():
     vci = goal_user_f_bin_i
     vci_negated = total_user_f_bin_i - goal_user_f_bin_i
 
-    ir_cohesiveness = [(vci / (prEci * users_goal_ratio)) +
-                       (vci_negated / (prEfi * (1 - users_goal_ratio)))]
+    ir_cohesiveness = (vci / (prEci * users_goal_ratio)) + (vci_negated / (prEfi * (1 - users_goal_ratio)))
     return ir_cohesiveness
 
 # SOCIAL TIE ANALYSIS
@@ -246,15 +255,12 @@ def get_users_from_frontier(user_id: int, priority: float) -> list:
 
     new_users = []
     favorite_users = get_users_from_favorite_tweets(user_id)
-    retweet_users = get_users_from_retweets(user_id)
     list_users = get_users_from_list(user_id)
 
     for u_id in favorite_users:
-        new_users.append((u_id, interest_ratio_timeline))
-    for u_id in retweet_users:
-        new_users.append((u_id, interest_ratio_timeline))
+        new_users.append((u_id, priority))
     for u_id in list_users:
-        new_users.append((u_id, interest_ratio_timeline))
+        new_users.append((u_id, priority))
 
     return new_users
 
@@ -263,24 +269,27 @@ def get_users_from_favorite_tweets(user_id: int) -> list:
     favorite_tweets = api.get_recents_favorite_tweets_by_id(user_id)
     users = []
     for tweet in favorite_tweets:
-        users.add(tweet.author.id)
+        users.append(tweet.author.id)
     return users
 
 
-def get_users_from_retweets(user_id: int) -> list:
-    retweets_tweets = api.get_tweet_retweeted_users(user_id)
-    users = []
-    for tweet in retweets_tweets:
-        users.add(tweet.author)
-    return users
-
-# Needed?
-
+# def get_users_from_retweets(user_id: int) -> list:
+#     retweets_tweets = api.get_tweet_retweeted_users(user_id)
+#     users = []
+#     for tweet in retweets_tweets:
+#         users.append(tweet.author)
+#     return users
 
 def get_users_from_list(user_id: int) -> list:
-    user_lists = api.get_user_subscriberd_lists(user_id)
+    user_lists = api.get_user_subscribed_lists(user_id)
     users = []
     for user_list in user_lists:
-        for user in user_list:
-            users.appen(user.id)
+        print("Analyzing list: "+ str(user_list.id))
+        try:
+            subscribers = api.get_list_subscribers(user_list.id)
+            for user in subscribers:
+                users.append(user.id)
+        except:
+            pass
+
     return users

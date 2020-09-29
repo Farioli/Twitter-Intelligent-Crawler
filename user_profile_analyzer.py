@@ -5,7 +5,6 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize 
 import crawled_users as cu
-import pdb
 
 #TODO: must be input
 coeff_bio = 1
@@ -47,6 +46,8 @@ def analyze_user(user, crawled_users, vocabolary):
     ir_in = 0 #If interest_ratio_indegree
     ir_out = 0 #IF interest_ratio_outdegree
 
+    #pdb.set_trace()
+
     # 1 - Calculate bio interest ratio
     bio = user.description
     ir_bio = analyze_bio(bio, vocabolary, True)
@@ -72,10 +73,13 @@ def analyze_user(user, crawled_users, vocabolary):
 
     # Calculate User Interest Ratio
     user_ir = calculate_user_priority(ir_bio, ir_act, ir_in, ir_out)
-    
+
     keywords = get_user_bio_keywords(bio, True)
 
     user = cu.UserData(user.id, False, keywords, binned_coeff_activity, binned_followers, binned_followees)
+
+    print("User "+ str(user.id) +": Bin(Activities: "+ str(binned_coeff_activity)+", Followee: "+ str(binned_followees)+", Followers: "+ str(binned_followers)+")")
+    print("> Results Bio (IR: "+ str(user_ir) +"): IrBio: "+ str(ir_bio)+ " IrAct: "+ str(ir_act)+ " IrIn: "+ str(ir_in)+" IrOut: "+ str(ir_out))
 
     return (user_ir, user)
 
@@ -130,7 +134,7 @@ def analyze_user_activities(binned_coeff_activity, crawled_users) -> float:
     Returns the priority in q2 for the user
 '''
 def calculate_user_priority(ir_bio: float, ir_act: float, ir_in: float, ir_out: float) -> float:
-    ir_profile = [ (ir_bio * coeff_bio) + (ir_act * coeff_features) + (ir_in * coeff_indegree) + (ir_out * coeff_outdegree)]
+    ir_profile = (ir_bio * coeff_bio) + (ir_act * coeff_features) + (ir_in * coeff_indegree) + (ir_out * coeff_outdegree)
     return ir_profile
 
 '''

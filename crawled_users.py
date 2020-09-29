@@ -6,14 +6,16 @@ class UserData:
     bin_activities: int
     bin_followers : int
     bin_followees : int
+    # bin_cohesiveness : int
 
-    def __init__(self, id, is_goal, keywords, bin_activities, bin_followers, bin_followees):
+    def __init__(self, id, is_goal, keywords, bin_activities, bin_followers, bin_followees, ): #bin_cohesiveness
         self.id = id
         self.is_goal = is_goal
         self.keywords = keywords
         self.bin_activities = bin_activities
         self.bin_followers = bin_followers
         self.bin_followees = bin_followees
+        # self.bin_cohesiveness = bin_cohesiveness
 
     def contains_keyword(self, keyword: str) -> bool:
         return keyword in self.keywords
@@ -26,6 +28,7 @@ class CrawledUsers:
 
     def __init__(self):
         self.crawled_users = set()
+    
     def add_crawled_user(self, user: UserData) -> None:
         self.crawled_users.add(user)
 
@@ -78,7 +81,7 @@ class CrawledUsers:
 
         for user in self.crawled_users:
             if user.bin_activities == bin:
-                bin_activities_user.add(bin_activities_user)
+                bin_activities_user.add(user)
         return bin_activities_user
 
     # This is used to calculate Va,i (isGoal = True) and !Va,i (isGoal = !True)
@@ -105,7 +108,7 @@ class CrawledUsers:
 
         for user in self.crawled_users:
             if user.bin_followers == bin:
-                bin_followers_user.add(bin_followers_user)
+                bin_followers_user.add(user)
         return bin_followers_user
 
     # This is used to calculate Va,i (isGoal = True) and !Va,i (isGoal = !True)
@@ -146,5 +149,31 @@ class CrawledUsers:
                     followees_searched_user.add(user)
 
             return len(followees_searched_user) / len(followees_total_users)
+        except:
+            return 0
+
+    # BIN COHESIVENESS
+    # Returns the user with the bin_i_of_cohesiveness
+    def get_user_with_bin_i_cohesiveness(self, bin:int) -> set:
+
+        bin_cohesiveness_user = set()
+
+        for user in self.crawled_users:
+            if user.bin_cohesiveness == bin:
+                bin_cohesiveness_user.add(user)
+        return bin_cohesiveness_user
+
+    # This is used to calculate Vc,i (isGoal = True) and !Vc,i (isGoal = !True)
+    def get_cohesiveness_bin_i_user_frequency(self, bin:int, is_goal: bool) -> float:
+
+        try:
+            cohesiveness_total_users = self.get_user_with_bin_i_cohesiveness(bin)
+            cohesiveness_searched_user = []
+
+            for user in cohesiveness_total_users:
+                if user.is_goal == is_goal:
+                    cohesiveness_searched_user.add(user)
+
+            return len(cohesiveness_searched_user) / len(cohesiveness_total_users)
         except:
             return 0

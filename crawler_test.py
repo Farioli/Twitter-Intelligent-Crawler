@@ -3,7 +3,7 @@ import crawled_users as cu
 import user_profile_analyzer as upa
 import tweet_analyzer as ta
 import vocabolary as v
-import crawler_twitter_api as twitter
+import crawler_twitter_api as api
 import user_graph as g
 import embeddings as embs
 
@@ -37,7 +37,7 @@ crawled_users.add_crawled_user(user5)
 
 vocabolary = v.Vocabolary()
 
-timeline = twitter.get_user_timeline_by_id(test_user_id)
+timeline = api.get_user_timeline_by_id(test_user_id)
 
 graph = g.UserGraph()
 
@@ -106,7 +106,7 @@ def test_twitter_goal():
 
 
 def test_timeline_goal(id, keyword):
-    timeline = twitter.get_user_timeline_by_id(id)
+    timeline = api.get_user_timeline_by_id(id)
     result = False
     predicate_keywords = [keyword]
     for tweet in timeline:
@@ -115,7 +115,23 @@ def test_timeline_goal(id, keyword):
 
     print(result)
 
+def test_list_user_extraction():
+    user_id = 2914144864
+    user_lists = api.get_user_subscribed_lists(user_id)
+    
+    users = []
+    for user_list in user_lists:
+        print("Analyzing list: "+ str(user_list.id))
+        try:
+            subscribers = api.get_list_subscribers(user_list.id)
+            for user in subscribers:
+                users.append(user.id)
+        except:
+            pass
+
+    return users
+
 
 # test_timeline_goal(974693992318324736, 'beer')
 
-test_crawling()
+test_list_user_extraction()
