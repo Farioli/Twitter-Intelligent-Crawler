@@ -3,6 +3,8 @@ import crawler as crawler
 from boilerpy3 import extractors
 import tagme
 import crawler_twitter_api as api
+import embeddings as embs
+import numpy as np
 
 coeff_micropost = 1
 coeff_cohesiveness = 0
@@ -15,16 +17,16 @@ keywords_interest_treshold = 0.005
 goal_treshold = 1
 
 
-def bin_cohesiveness(cohesiveness):
-    if cohesiveness < 0.20:
-        return 1
-    if cohesiveness <= 0.25:
-        return 2
-    # value beetween 0.26 and 1
-    return 3
+def get_bin_cohesiveness(cohesiveness):
 
+    # If the timeline is sparse
+    if cohesiveness >= 500.0:
+        return 0
+    # else, the timeline is dense
+    return 1
 
-estimates_cohesiveness = [0, 33.74, 37.11, 29.15]
+# TODO: Update with fresh statistics
+estimates_cohesiveness = [33.74, 37.11]
 
 '''
     This is called after a timeline is available from a choosen user from Q2 (Timeline Queue)
@@ -35,7 +37,7 @@ estimates_cohesiveness = [0, 33.74, 37.11, 29.15]
 '''
 
 
-def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: int, user_graph, users_goal_ratio: float) -> (bool, list, list):
+def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: int, user_graph, crawled_user, users_goal_ratio: float, model) -> (bool, list, list):
 
     is_goal = False
     mentions_users = []
@@ -57,10 +59,8 @@ def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: in
         is_goal = True
 
     # 2 Calculate the cohesiveness ratio
-    binned_cohesiveness = calculate_lexical_cohesion()
-    # TODO
-    # ir_coh = calculate_cohesiveness_interest_ratio()
-    ir_coh = 0
+    binned_cohesiveness = calculate_lexical_cohesion(timeline, model)
+    ir_coh = calculate_cohesiveness_interest_ratio(binned_cohesiveness, crawled_user)
 
     # 3 Calculate the social tie interest ratio
     ir_parents = calculate_parent_interest_ratio(
@@ -81,7 +81,7 @@ def analyze_timeline(timeline, vocabolary, predicate_keywords: list, user_id: in
         for userId in retweet_users:
             new_users.append((userId, ir_timeline))
 
-    return is_goal, new_users, goal_tweets
+    return binned_cohesiveness, is_goal, new_users, goal_tweets
 
 
 '''
@@ -154,22 +154,35 @@ def analyze_tweet(tweet, vocabolary) -> (float, list):
     Based on postulate: "A timeline focused on a limited set of topics has more chances to have 
     ties towards users whose timelines deal with the same topics"
 '''
+def calculate_lexical_cohesion(timeline, model):
+
+    embeddings_sum = embs.get_timeline_embeddings_sum(timeline, model)
+    lexical_cohesion = np.linalg.norm(embeddings_sum)         
+    return get_bin_cohesiveness(lexical_cohesion)
 
 
-def calculate_lexical_cohesion():
-
-    # TODO: LDA on the recent tweets
-    lexical_cohesion = 0
-
-    return bin_cohesiveness(lexical_cohesion)
-
-
-def calculate_cohesiveness_interest_ratio():
+def calculate_cohesiveness_interest_ratio(bin_cohesiveness:int, crawled_user):
+    
+    users_goal_ratio = crawled_user.get_goal_user_ratio()
     prEci = estimates_cohesiveness[bin_cohesiveness]
-    vci = goal_user_f_bin_i
-    vci_negated = total_user_f_bin_i - goal_user_f_bin_i
+    
+    total_user_f_bin_i = len(crawled_user.get_user_with_bin_i_cohesiveness(bin_cohesiveness))
+    vci =  crawled_user.get_cohesiveness_bin_i_user_frequency(bin_cohesiveness, True)
+    
+    vci_negated = total_user_f_bin_i - vci
 
-    ir_cohesiveness = (vci / (prEci * users_goal_ratio)) + (vci_negated / (prEfi * (1 - users_goal_ratio)))
+    try:
+        goal_bin_cohesiveness_ratio = (vci / (prEci * users_goal_ratio))
+    except:
+        goal_bin_cohesiveness_ratio = 0
+
+    try:
+        no_goal_bin_cohesiveness_ratio = (vci_negated / (prEfi * (1 - users_goal_ratio)))
+    except:
+        no_goal_bin_cohesiveness_ratio = 0
+
+
+    ir_cohesiveness = goal_bin_cohesiveness_ratio + no_goal_bin_cohesiveness_ratio
     return ir_cohesiveness
 
 # SOCIAL TIE ANALYSIS

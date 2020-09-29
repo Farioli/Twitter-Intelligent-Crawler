@@ -76,7 +76,7 @@ def analyze_user(user, crawled_users, vocabolary):
 
     keywords = get_user_bio_keywords(bio, True)
 
-    user = cu.UserData(user.id, False, keywords, binned_coeff_activity, binned_followers, binned_followees)
+    user = cu.UserData(user.id, False, keywords, binned_coeff_activity, binned_followers, binned_followees, -1)
 
     print("User "+ str(user.id) +": Bin(Activities: "+ str(binned_coeff_activity)+", Followee: "+ str(binned_followees)+", Followers: "+ str(binned_followers)+")")
     print("> Results Bio (IR: "+ str(user_ir) +"): IrBio: "+ str(ir_bio)+ " IrAct: "+ str(ir_act)+ " IrIn: "+ str(ir_in)+" IrOut: "+ str(ir_out))

@@ -26,5 +26,13 @@ Package dependencies:
 0. Activate the virtualenv (source /../ML_SII_Project/env/bin/activate)
 
 1. Start the "app.py" file by usign the comand "flusk run" and use the webapp functions
-or
-2. Run the crawler_test.py 
+
+2. Run with "python3 crawler.py crawler_input_corona_virus.json"
+    (Or with a different valid json)
+
+
+# TODO:
+- Update Cohesiveness bin estimates
+- Clean User Bio like tweets
+- Function to print user graph
+- Better User API usage

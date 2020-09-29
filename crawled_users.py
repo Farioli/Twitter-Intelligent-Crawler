@@ -6,16 +6,16 @@ class UserData:
     bin_activities: int
     bin_followers : int
     bin_followees : int
-    # bin_cohesiveness : int
+    bin_cohesiveness : int
 
-    def __init__(self, id, is_goal, keywords, bin_activities, bin_followers, bin_followees, ): #bin_cohesiveness
+    def __init__(self, id, is_goal, keywords, bin_activities, bin_followers, bin_followees, bin_cohesiveness): 
         self.id = id
         self.is_goal = is_goal
         self.keywords = keywords
         self.bin_activities = bin_activities
         self.bin_followers = bin_followers
         self.bin_followees = bin_followees
-        # self.bin_cohesiveness = bin_cohesiveness
+        self.bin_cohesiveness = bin_cohesiveness
 
     def contains_keyword(self, keyword: str) -> bool:
         return keyword in self.keywords

@@ -10,6 +10,7 @@ import time
 import sys
 import json
 import pdb
+import embeddings as embs
 
 # interesting user / total user analyzed
 prEp = 1
@@ -172,6 +173,8 @@ class Crawler:
 
     def startCrawling(self, predicate, seeds, total_seconds_crawling: int):
 
+        embs_model = embs.download_embeddings_model()
+
         # Start Timer
         self.is_crawling = True
         self.start_time = time.time()
@@ -253,8 +256,8 @@ class Crawler:
                 # 4 - Analyize the timeline of the q2 user
                 user_timeline = twitter.get_user_timeline_by_id(q2_user.id)
 
-                is_goal, new_users, goal_tweets = timeline.analyze_timeline(
-                    user_timeline, self.vocabolary, self.predicate_keywords, q2_user.id, self.graph, self.crawled_users.get_goal_user_ratio())
+                user_bin_coh, is_goal, new_users, goal_tweets = timeline.analyze_timeline(
+                    user_timeline, self.vocabolary, self.predicate_keywords, q2_user.id, self.graph, self.crawled_users, self.crawled_users.get_goal_user_ratio(), embs_model)
 
                 print("Is goal:"+ str(is_goal))
                 if is_goal:
@@ -271,6 +274,8 @@ class Crawler:
 
                 # 5 - Add user to crawled users (Uc)
                 q2_user.is_goal = is_goal
+                q2_user.bin_cohesiveness = user_bin_coh
+                print(q2_user)
                 self.crawled_users.add_crawled_user(q2_user)
 
                 # Update the keywords interest ratio
