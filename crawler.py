@@ -88,7 +88,6 @@ def crawling(predicate: str, seeds: list, max_time: float):
             user_timeline, vocabolary, predicate_keywords, q2_user.id, graph, crawled_users.get_goal_user_ratio())
 
         for u in new_users:
-            print(u)
             frontier.append(u)
 
         for t in goal_tweets:
@@ -260,14 +259,15 @@ class Crawler:
                 print("Is goal:"+ str(is_goal))
                 if is_goal:
                     
-
                     for u in new_users:
                         self.frontier.append(u)
+                    
                     print("New users: +"+ str(len(new_users)))
 
+                    # Add the tweet to the target tweets list and to the output file
                     for t in goal_tweets:
                         self.output_tweets.append(t)
-                        output_file.write(t.text+"\n")
+                        write_goal_tweet_on_results(t.text)
 
                 # 5 - Add user to crawled users (Uc)
                 q2_user.is_goal = is_goal
@@ -293,11 +293,12 @@ class Crawler:
             print("==================================================================\n")
 
         self.is_crawling = False
+        print("Crawling end")
 
         # return tweets
         # print("Output tweets:" + output_tweets)
 
-        output_file.close()
+        
 
     def get_elapsed_time(self):
         now = time.time()
@@ -334,6 +335,11 @@ def get_max_priority_from_queue(user_queue):
     else:
         return "Empty!"
 
+def write_goal_tweet_on_results(tweet_text):
+
+    output_file = open("results.txt", "a")
+    output_file.write(tweet_text+"\n")
+    output_file.close()
 
 def main():
     if len(sys.argv) != 2:
@@ -352,7 +358,6 @@ def main():
         return
     
     crawler = Crawler()
-
 
     print("Starting")
     crawler.startCrawling(predicate, seeds, total_seconds)
